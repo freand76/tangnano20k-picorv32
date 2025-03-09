@@ -17,10 +17,25 @@ module tangnano20k_top(
                        output       mspi_di,
                        input        mspi_do);
 
-   // Connections
-   wire                             n_reset;
+   // Reset Handler
+   logic [15:0]                     start_wait_cnt;
+   logic                            n_reset;
 
-   assign n_reset = !rst;
+   always @ (posedge sys_clk)
+     begin
+        if (rst)
+          begin
+             start_wait_cnt <= 0;
+             n_reset <= 0;
+          end
+        else
+          if (start_wait_cnt < 32768)
+            begin
+               start_wait_cnt <= start_wait_cnt + 1'b1;
+            end
+          else
+            n_reset <= 1;
+     end
 
    soc_top
      #(
