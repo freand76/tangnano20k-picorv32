@@ -1,2 +1,3 @@
-# tangnano20k-picorv32
-picorv32 based soc for tangenano20k  
+picorv32 on tang-nano-20k
+iverilog simulation
+synthesis with yosys/nextpnr
