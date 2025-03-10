@@ -64,8 +64,7 @@ module soc_top
           begin
              if (led_data_valid)
                begin
-
-                  led_reg = ~mem_wdata[5:0];
+                  led_reg <= ~mem_wdata[5:0];
                end
           end
      end
