@@ -1,3 +1,4 @@
+`timescale 1ns / 1ns
 `default_nettype none
 
 module soc_top
@@ -36,6 +37,7 @@ module soc_top
 
    wire [7:0]   uart_tx_data;
    wire         uart_tx_data_valid;
+   wire         uart_tx_data_ready;
 
    wire         led_data_valid;
    logic [5:0]  led_reg;
@@ -125,7 +127,24 @@ module soc_top
         .mem_wdata   (mem_wdata  ),
         .mem_wstrb   (mem_wstrb  ),
         .mem_rdata   (mem_rdata  ),
-        .irq         (irq        )
+        .irq         (irq        ),
+        .trap        (),
+        .mem_la_read (),
+        .mem_la_write(),
+        .mem_la_addr (),
+        .mem_la_wdata(),
+        .mem_la_wstrb(),
+        .pcpi_valid  (),
+        .pcpi_insn   (),
+        .pcpi_rs1    (),
+        .pcpi_rs2    (),
+        .pcpi_wr     (),
+        .pcpi_rd     (),
+        .pcpi_wait   (),
+        .pcpi_ready  (),
+        .eoi         (),
+        .trace_valid (),
+        .trace_data  ()
         );
 
    uart_tx #(
@@ -137,6 +156,7 @@ module soc_top
             .rst_n(n_reset),
             .tx_data(uart_tx_data),
             .tx_data_valid(uart_tx_data_valid),
+            .tx_data_ready(uart_tx_data_ready),
             .tx_pin(uart_tx_pin)
             );
 

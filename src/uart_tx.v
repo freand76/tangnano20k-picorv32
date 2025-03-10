@@ -1,3 +1,6 @@
+`timescale 1ns / 1ns
+`default_nettype none
+
 module uart_tx
   #(
     parameter UART_CLK_HZ = 50000000, //clock frequency(Mhz)
@@ -12,7 +15,7 @@ module uart_tx
     output      tx_pin            //serial data output
     );
    //calculates the clock cycle for baud rate
-   localparam   CYCLE = UART_CLK_HZ / BAUD_RATE;
+   localparam   CYCLE = 16'(UART_CLK_HZ / BAUD_RATE);
    //state machine code
    localparam   S_IDLE       = 1;
    localparam   S_START      = 2;//start bit
@@ -38,26 +41,26 @@ module uart_tx
         case(state)
           S_IDLE:
             if(tx_data_valid == 1'b1)
-              next_state <= S_START;
+              next_state = S_START;
             else
-              next_state <= S_IDLE;
+              next_state = S_IDLE;
           S_START:
             if(cycle_cnt == CYCLE - 1)
-              next_state <= S_SEND_BYTE;
+              next_state = S_SEND_BYTE;
             else
-              next_state <= S_START;
+              next_state = S_START;
           S_SEND_BYTE:
             if(cycle_cnt == CYCLE - 1  && bit_cnt == 3'd7)
-              next_state <= S_STOP;
+              next_state = S_STOP;
             else
-              next_state <= S_SEND_BYTE;
+              next_state = S_SEND_BYTE;
           S_STOP:
             if(cycle_cnt == CYCLE - 1)
-              next_state <= S_IDLE;
+              next_state = S_IDLE;
             else
-              next_state <= S_STOP;
+              next_state = S_STOP;
           default:
-            next_state <= S_IDLE;
+            next_state = S_IDLE;
         endcase
      end
    always@(posedge clk or negedge rst_n)

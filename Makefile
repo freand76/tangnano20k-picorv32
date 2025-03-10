@@ -32,6 +32,14 @@ VERILOG_FILES = \
 	src/spi_flash_read.v
 
 ###
+### VERILATOR
+###
+
+.PHONY: lint
+lint:
+	verilator --lint-only $(VERILOG_FILES) --top-module soc_top
+
+###
 ### IVERILOG
 ###
 
