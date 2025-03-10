@@ -29,6 +29,7 @@ VERILOG_FILES = \
 	src/soc_top.v \
 	src/picorv32.v \
 	src/uart_tx.v \
+	src/ram_memory.v \
 	src/spi_flash_read.v
 
 ###

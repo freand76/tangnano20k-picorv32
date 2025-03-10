@@ -20,40 +20,69 @@ module soc_top
     output       spi_miso
 );
 
-   wire         sfr_start;
-   wire         sfr_data_strobe;
-   wire         sfr_done;
-   wire [31:0]  sfr_data_out;
-   wire [23:0]  sfr_address;
+   wire          sfr_start;
+   wire          sfr_data_strobe;
+   wire          sfr_done;
+   wire [31:0]   sfr_data_out;
+   wire [23:0]   sfr_address;
 
-   wire         mem_valid;
-   wire         mem_instr;
-   wire         mem_ready;
-   wire [3:0]   mem_wstrb;
-   wire [31:0]  mem_addr;
-   wire [31:0]  mem_rdata;
-   wire [31:0]  mem_wdata;
-   wire [31:0]  irq;
+   wire          mem_valid;
+   wire          mem_instr;
+   wire          mem_ready;
+   wire [3:0]    mem_wstrb;
+   wire [31:0]   mem_addr;
+   wire [31:0]   mem_rdata;
+   wire [31:0]   mem_wdata;
+   wire [31:0]   irq;
 
-   wire [7:0]   uart_tx_data;
-   wire         uart_tx_data_valid;
-   wire         uart_tx_data_ready;
+   wire [7:0]    uart_tx_data;
+   wire          uart_tx_data_ready;
 
-   wire         led_data_valid;
-   logic [5:0]  led_reg;
+   wire          led_data_valid;
+   logic [5:0]   led_reg;
 
-   assign sfr_start = mem_valid;
+   wire [31:0]   ram_data_out;
+
+   wire          ram_wstrb;
+   wire          led_wstrb;
+   wire          uart_wstrb;
+
+   wire          sfr_valid;
+   wire          ram_valid;
+   wire          uart_valid;
+   wire          led_valid;
+
+   logic         ram_ready;
+   logic         uart_ready;
+   logic         led_ready;
+
+   // Address decoder
+   assign sfr_valid = mem_addr[31:24] == 8'h00;
+   assign ram_valid = mem_addr[31:24] == 8'h01;
+   assign led_valid = mem_addr[31:24] == 8'hfe;
+   assign uart_valid = mem_addr[31:24] == 8'hff;
+
+   assign sfr_start = sfr_valid & mem_valid;
    assign sfr_address = mem_addr[23:0];
-   assign mem_ready = sfr_data_strobe;
-   assign mem_rdata = sfr_data_out;
+
+   assign uart_wstrb = mem_wstrb[0] & uart_valid;
+   assign ram_wstrb = mem_wstrb[0] & ram_valid;
+   assign led_wstrb = mem_wstrb[0] & led_valid;
+
+   assign mem_ready = sfr_data_strobe || ram_ready || uart_ready || led_ready;
+
+   always @ (posedge clk)
+     begin
+        ram_ready <= mem_valid && !mem_ready && ram_valid;
+        uart_ready <= mem_valid && !mem_ready && uart_valid;
+        led_ready <= mem_valid && !mem_ready && led_valid;
+     end
+
+   assign mem_rdata = sfr_valid ? sfr_data_out : ram_data_out;
+
    assign irq = 32'h0;
 
    assign led = led_reg;
-   assign uart_tx_data = mem_wdata[7:0];
-
-   assign uart_tx_data_valid = mem_wstrb[0] & (mem_addr[31:24] == 8'hff);
-   assign led_data_valid = mem_wstrb[0] & (mem_addr[31:24] == 8'hfe);
-
    assign uart_tx_data = mem_wdata[7:0];
 
    always @ (posedge clk, negedge n_reset)
@@ -64,12 +93,20 @@ module soc_top
           end
         else
           begin
-             if (led_data_valid)
+             if (led_wstrb)
                begin
                   led_reg <= ~mem_wdata[5:0];
                end
           end
      end
+
+   ram_memory ram_memory(
+                         .clk(clk),
+                         .wen(ram_wstrb),
+                         .address(mem_addr[11:0]),
+                         .wdata(mem_wdata),
+                         .rdata(ram_data_out)
+                         );
 
    spi_flash_read
      #(
@@ -155,7 +192,7 @@ module soc_top
             .clk(clk),
             .rst_n(n_reset),
             .tx_data(uart_tx_data),
-            .tx_data_valid(uart_tx_data_valid),
+            .tx_data_valid(uart_wstrb),
             .tx_data_ready(uart_tx_data_ready),
             .tx_pin(uart_tx_pin)
             );
