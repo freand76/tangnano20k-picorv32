@@ -50,7 +50,7 @@ module iverilog_top;
         $display("Hello, World");
         $monitor("LED %x", led);
 
-        #200000
+        #2000000
           $finish;
      end
 
@@ -74,7 +74,7 @@ module iverilog_top;
                for (uart_bit=0; uart_bit < 8; uart_bit = uart_bit + 1)
                  begin
                     #IVERILOG_BIT_CYCLE
-                             uart_byte = { uart_byte[6:0], !uart_tx_pin};
+                             uart_byte = { uart_tx_pin, uart_byte[7:1] };
                  end
              #IVERILOG_BIT_CYCLE;
              $display("%0t: UART DATA: %x ", $time, uart_byte);
