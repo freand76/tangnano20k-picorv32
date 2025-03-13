@@ -78,7 +78,9 @@ module soc_top
         led_ready <= mem_valid && !mem_ready && led_valid;
      end
 
-   assign mem_rdata = sfr_valid ? sfr_data_out : ram_data_out;
+   assign mem_rdata = uart_valid ? { 31'b0, uart_tx_data_ready } :
+                      sfr_valid ? sfr_data_out :
+                      ram_data_out;
 
    assign irq = 32'h0;
 

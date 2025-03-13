@@ -5,7 +5,7 @@ module ram_memory(
                   output [31:0] rdata
                   );
 
-   reg [31:0]                   mem [0:255];
+   reg [31:0]                   mem [0:512];
 
    assign rdata = mem[address[11:2]];
 
