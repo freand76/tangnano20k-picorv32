@@ -50,7 +50,7 @@ module iverilog_top;
         $display("Hello, World");
         $monitor("LED %x", led);
 
-        #2000000
+        #10000000
           $finish;
      end
 

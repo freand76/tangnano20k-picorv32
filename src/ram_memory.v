@@ -13,6 +13,7 @@ module ram_memory(
      begin
         if (wen)
           begin
+             $display("Write %x to %x", wdata, address); 
              mem[address[11:2]] <= wdata;
           end
      end

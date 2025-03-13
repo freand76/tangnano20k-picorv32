@@ -100,7 +100,11 @@ $(SW_BUILD_DIR)/start.o: sw/start.S
 	mkdir -p $(SW_BUILD_DIR)
 	riscv64-unknown-elf-gcc -mabi=ilp32 -march=rv32im -c -o $@ $<
 
-SW_OBJECTS = $(SW_BUILD_DIR)/start.o
+$(SW_BUILD_DIR)/test.o: sw/test.c
+	mkdir -p $(SW_BUILD_DIR)
+	riscv64-unknown-elf-gcc -v -mabi=ilp32 -march=rv32im -c -o $@ $<
+
+SW_OBJECTS = $(SW_BUILD_DIR)/start.o $(SW_BUILD_DIR)/test.o
 
 $(SW_BUILD_DIR)/fw.elf: $(SW_OBJECTS) sw/riscv.ld
 	riscv64-unknown-elf-ld -b elf32-littleriscv -m elf32lriscv -static -nostdlib --strip-debug $(SW_OBJECTS) -o $@ -Tsw/riscv.ld
