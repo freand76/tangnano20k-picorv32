@@ -1,35 +1,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-static void print_char(char chr) {
-    static volatile uint32_t *uart = (uint32_t *)0xff000000;
-    while (*uart == 0x00000000) {
-    }
-    *uart = chr;
-}
+#include "led_drv.h"
+#include "uart_drv.h"
 
-static void print_str(char *str) {
-    while (*str != 0) {
-        print_char(*str);
-        str++;
-    }
-}
+int main(void) {
+    uart_print_str("\n\nHello World\n");
 
-static void print_hex(uint32_t hexval) {
-    static char nibble2char[16] = "0123456789abcdef";
-
-    uint32_t bit_shift = 32;
-    while (bit_shift != 0) {
-        bit_shift -= 4;
-        uint32_t nibble = (hexval >> bit_shift) & 0xf;
-        char chr = nibble2char[nibble];
-        print_char(chr);
-    }
-}
-
-void main(void) {
-    uint32_t *led = (uint32_t *)0xfe000000;
-    *led = ~0x12;
+    led_set(0x01);
 
     uint32_t *ram32 = (uint32_t *)0x01000000;
     uint16_t *ram16 = (uint16_t *)0x01000000;
@@ -42,7 +20,9 @@ void main(void) {
     *ram++ = 0xbe;
     *ram++ = 0xda;
 
-    print_hex(*ram32);
+    led_set(0x02);
+    uart_print_hex(*ram32);
+    uart_print_char('\n');
 
     ram = (uint8_t *)0x01000000;
 
@@ -51,14 +31,21 @@ void main(void) {
     ram[1] = 0x33;
     ram[0] = 0x44;
 
-    *led = ~0x11;
-    print_hex(ram16[1]);
-    *led = ~0x13;
-    print_hex(*ram16);
-    *led = ~0x10;
+    led_set(0x03);
+    uart_print_hex(ram16[1]);
+    uart_print_char('\n');
 
-    // print_str("Hello World\n");
+    led_set(0x04);
+    uart_print_hex(*ram16);
+    uart_print_char('\n');
 
+    uint8_t led_cnt = 0;
     while (true) {
+        led_set(led_cnt++);
+        for (uint32_t idx = 0; idx < 10000; idx++) {
+            __asm__("nop");
+        }
     }
+
+    return 0;
 }

@@ -96,15 +96,28 @@ program-flash-top: $(RTL_BUILD_DIR)/top.fs
 ### SOFTWARE
 ###
 
+CFLAGS = \
+	-pedantic -Wall -Werror -Wextra \
+	-Wdouble-promotion -Wstrict-prototypes -Wcast-qual \
+	-Wmissing-prototypes -Winit-self -Wpointer-arith -Wshadow -MMD -MP -O3 \
+	-fno-var-tracking-assignments -ffunction-sections -fdata-sections
+
+.PHONY: software
+software: $(SW_BUILD_DIR)/flash_content.bin
+
 $(SW_BUILD_DIR)/start.o: sw/start.S
 	mkdir -p $(SW_BUILD_DIR)
 	riscv64-unknown-elf-gcc -mabi=ilp32 -march=rv32im -c -o $@ $<
 
-$(SW_BUILD_DIR)/test.o: sw/test.c
+$(SW_BUILD_DIR)/%.o: sw/%.c
 	mkdir -p $(SW_BUILD_DIR)
-	riscv64-unknown-elf-gcc -v -mabi=ilp32 -march=rv32im -c -o $@ $<
+	riscv64-unknown-elf-gcc $(CFLAGS) -mabi=ilp32 -march=rv32im -c -o $@ $<
 
-SW_OBJECTS = $(SW_BUILD_DIR)/start.o $(SW_BUILD_DIR)/test.o
+SW_OBJECTS = \
+	$(SW_BUILD_DIR)/start.o \
+	$(SW_BUILD_DIR)/led_drv.o \
+	$(SW_BUILD_DIR)/uart_drv.o \
+	$(SW_BUILD_DIR)/test.o
 
 $(SW_BUILD_DIR)/fw.elf: $(SW_OBJECTS) sw/riscv.ld
 	riscv64-unknown-elf-ld -b elf32-littleriscv -m elf32lriscv -static -nostdlib --strip-debug $(SW_OBJECTS) -o $@ -Tsw/riscv.ld
@@ -115,9 +128,9 @@ $(SW_BUILD_DIR)/flash_content.bin: $(SW_BUILD_DIR)/fw.elf
 MEM.TXT: $(SW_BUILD_DIR)/flash_content.bin
 	hexdump -v -e '4/1 "%02x " "\n"' $< > $@
 
-program-flash-code: $(SW_BUILD_DIR)/flash_content.bin
+flash-software: $(SW_BUILD_DIR)/flash_content.bin
 	openFPGALoader -btangnano20k --external-flash -o 0x500000 $<
 
 .PHONY: clang-format
 clang-format:
-	clang-format -i sw/*.c
+	clang-format -i sw/*.c sw/*.h
