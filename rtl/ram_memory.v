@@ -5,16 +5,16 @@ module ram_memory(
                   input         clk,
                   input         sel,
                   input [3:0]   wen,
-                  input [11:0]  address,
+                  input [10:0]  address,
                   input [31:0]  wdata,
                   output [31:0] rdata
                   );
 
-   reg [31:0]                   mem [0:512];
+   reg [31:0]                   mem [0:511];
    wire [31:0]                  mem_data;
 
    assign rdata = mem_data;
-   assign mem_data = mem[address[11:2]];
+   assign mem_data = mem[address[10:2]];
 
    always @(*)
      begin
@@ -35,19 +35,19 @@ module ram_memory(
 
              case(wen)
                4'b0001 :
-                 mem[address[11:2]] <= { mem_data[31:24] , mem_data[23:16], mem_data[15:8], wdata[7:0] };
+                 mem[address[10:2]] <= { mem_data[31:24] , mem_data[23:16], mem_data[15:8], wdata[7:0] };
                4'b0010 :
-                 mem[address[11:2]] <= { mem_data[31:24] , mem_data[23:16], wdata[15:8], mem_data[7:0] };
+                 mem[address[10:2]] <= { mem_data[31:24] , mem_data[23:16], wdata[15:8], mem_data[7:0] };
                4'b0100 :
-                 mem[address[11:2]] <= { mem_data[31:24] , wdata[23:16], mem_data[15:8], mem_data[7:0] };
+                 mem[address[10:2]] <= { mem_data[31:24] , wdata[23:16], mem_data[15:8], mem_data[7:0] };
                4'b1000 :
-                 mem[address[11:2]] <= { wdata[31:24] , mem_data[23:16], mem_data[15:8], mem_data[7:0] };
+                 mem[address[10:2]] <= { wdata[31:24] , mem_data[23:16], mem_data[15:8], mem_data[7:0] };
                4'b0011 :
-                 mem[address[11:2]] <= { wdata[31:16] , mem_data[15:0] };
+                 mem[address[10:2]] <= { wdata[31:16] , mem_data[15:0] };
                4'b1100 :
-                 mem[address[11:2]] <= { mem_data[31:16] , wdata[15:0] };
+                 mem[address[10:2]] <= { mem_data[31:16] , wdata[15:0] };
                4'b1111 :
-                 mem[address[11:2]] <= wdata;
+                 mem[address[10:2]] <= wdata;
                default:
                  begin
                     // Empty default to keep linter happy

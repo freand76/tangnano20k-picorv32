@@ -111,7 +111,7 @@ module soc_top
                          .clk(clk_cpu),
                          .sel(ram_valid),
                          .wen(ram_wstrb),
-                         .address(mem_addr[11:0]),
+                         .address(mem_addr[10:0]),
                          .wdata(mem_wdata),
                          .rdata(ram_data_out)
                          );
