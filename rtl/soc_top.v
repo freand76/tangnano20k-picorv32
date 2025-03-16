@@ -236,7 +236,7 @@ module soc_top
             );
 
    // VIDEO
-   assign video_data_out = 32'b0;
+   assign video_data_out = mem_addr[2] ? { 22'b0, ypos } : { 22'b0, xpos };
 
    always @ (posedge clk_cpu, negedge n_reset)
      begin

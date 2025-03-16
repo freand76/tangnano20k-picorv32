@@ -42,16 +42,19 @@ int main(void) {
     uart_print_char('\n');
 
     uint8_t led_cnt = 0;
+
     while (true) {
+        while (video[1] > 480);
+        video[0] = 0xff0000;
+        while (video[1] < 40);
+        video[0] = 0x000000;
+        while (video[1] < 80);
+        video[0] = 0x00ff00;
+        while (video[1] < 120);
+        video[0] = 0x0000ff;
+        while (video[1] < 480);
+
         led_set(led_cnt++);
-        *video = 0xff0000;
-        for (uint32_t idx = 0; idx < 150; idx++) {
-            __asm__("nop");
-        }
-        *video = 0x000000;
-        for (uint32_t idx = 0; idx < 150; idx++) {
-            __asm__("nop");
-        }
     }
 
     return 0;
