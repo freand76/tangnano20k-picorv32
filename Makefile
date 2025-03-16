@@ -29,6 +29,8 @@ VERILOG_FILES = \
 	rtl/soc_top.v \
 	rtl/picorv32.v \
 	rtl/uart_tx.v \
+	rtl/dvi_generator.v \
+	rtl/tmds_channel.v \
 	rtl/ram_memory.v \
 	rtl/spi_flash_read.v
 

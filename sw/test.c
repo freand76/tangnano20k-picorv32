@@ -13,6 +13,8 @@ int main(void) {
     uint16_t *ram16 = (uint16_t *)0x01000000;
     uint8_t *ram = (uint8_t *)0x01000000;
 
+    volatile uint32_t *video = (uint32_t *)0xf0000000;
+
     *ram32 = 0x00000000;
 
     *ram++ = 0xfe;
@@ -42,7 +44,12 @@ int main(void) {
     uint8_t led_cnt = 0;
     while (true) {
         led_set(led_cnt++);
-        for (uint32_t idx = 0; idx < 10000; idx++) {
+        *video = 0xff0000;
+        for (uint32_t idx = 0; idx < 150; idx++) {
+            __asm__("nop");
+        }
+        *video = 0x000000;
+        for (uint32_t idx = 0; idx < 150; idx++) {
             __asm__("nop");
         }
     }

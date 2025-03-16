@@ -30,7 +30,7 @@ module iverilog_top;
        .SPI_FLASH_BASE(0)
        )
    soc(
-       .clk(clk),
+       .clk_cpu(clk),
        .n_reset(n_reset),
        .uart_tx_pin(uart_tx_pin),
        .led(led),

@@ -8,11 +8,16 @@ module soc_top
     parameter SPI_FLASH_BASE = 0
     )
    (
-    input        clk,
+    input        clk_cpu,
+    input        clk_pixel,
     input        n_reset,
 
     output       uart_tx_pin,
     output [5:0] led,
+
+    output [9:0] tmds_r,
+    output [9:0] tmds_g,
+    output [9:0] tmds_b,
 
     output       spi_cs,
     output       spi_clk,
@@ -20,12 +25,14 @@ module soc_top
     output       spi_miso
 );
 
+   // SPI Flash Readed
    wire          sfr_start;
    wire          sfr_data_strobe;
    wire          sfr_done;
    wire [31:0]   sfr_data_out;
    wire [23:0]   sfr_address;
 
+   // PICORV32
    wire          mem_valid;
    wire          mem_instr;
    wire          mem_ready;
@@ -35,75 +42,78 @@ module soc_top
    wire [31:0]   mem_wdata;
    wire [31:0]   irq;
 
+   // UART
    wire [7:0]    uart_tx_data;
    wire          uart_tx_data_ready;
 
+   // LED
    wire          led_data_valid;
    logic [5:0]   led_reg;
 
+   // VIDEO
+   reg [23:0]    rgb_data;
+   wire [9:0]    xpos;
+   wire [9:0]    ypos;
+   wire          line_end;
+   wire          frame_end;
+   wire [31:0]   video_data_out;
+
+   // RAM
    wire [31:0]   ram_data_out;
 
+   // WRITE STROBE
    wire [3:0]    ram_wstrb;
    wire          led_wstrb;
    wire          uart_wstrb;
+   wire          video_wstrb;
 
+   // ADDRESS DECODER
    wire          sfr_valid;
    wire          ram_valid;
    wire          uart_valid;
    wire          led_valid;
+   wire          video_valid;
 
+   // BUS ACKNOWLEDGE
    logic         ram_ready;
    logic         uart_ready;
    logic         led_ready;
+   logic         video_ready;
 
-   // Address decoder
+   // ADDRESS DECODER
    assign sfr_valid = mem_addr[31:24] == 8'h00;
    assign ram_valid = mem_addr[31:24] == 8'h01;
    assign led_valid = mem_addr[31:24] == 8'hfe;
    assign uart_valid = mem_addr[31:24] == 8'hff;
+   assign video_valid = mem_addr[31:24] == 8'hf0;
 
+   assign mem_rdata = uart_valid ? { 31'b0, uart_tx_data_ready } :
+                      sfr_valid ? sfr_data_out :
+                      video_valid ? video_data_out :
+                      ram_data_out;
+
+   // REQUEST / ACKNOWLEDGE
    assign sfr_start = sfr_valid & mem_valid;
    assign sfr_address = mem_addr[23:0];
+   assign mem_ready = sfr_data_strobe || ram_ready || uart_ready || led_ready || video_ready;
 
-   assign uart_wstrb = mem_wstrb[0] & uart_valid;
-   assign ram_wstrb = ram_valid ? mem_wstrb : 4'b0000;
-   assign led_wstrb = mem_wstrb[0] & led_valid;
-
-   assign mem_ready = sfr_data_strobe || ram_ready || uart_ready || led_ready;
-
-   always @ (posedge clk)
+   always @ (posedge clk_cpu)
      begin
         ram_ready <= mem_valid && !mem_ready && ram_valid;
         uart_ready <= mem_valid && !mem_ready && uart_valid;
         led_ready <= mem_valid && !mem_ready && led_valid;
+        video_ready <= mem_valid && !mem_ready && video_valid;
      end
 
-   assign mem_rdata = uart_valid ? { 31'b0, uart_tx_data_ready } :
-                      sfr_valid ? sfr_data_out :
-                      ram_data_out;
+   // WRITE STRIBE
+   assign uart_wstrb = mem_wstrb[0] & uart_valid;
+   assign ram_wstrb = ram_valid ? mem_wstrb : 4'b0000;
+   assign led_wstrb = mem_wstrb[0] & led_valid;
+   assign video_wstrb = mem_wstrb[0] & video_valid;
 
-   assign irq = 32'h0;
-
-   assign led = led_reg;
-   assign uart_tx_data = mem_wdata[7:0];
-
-   always @ (posedge clk, negedge n_reset)
-     begin
-        if (!n_reset)
-          begin
-             led_reg <= 6'h0;
-          end
-        else
-          begin
-             if (led_wstrb)
-               begin
-                  led_reg <= ~mem_wdata[5:0];
-               end
-          end
-     end
-
+   // RAM MEMORY
    ram_memory ram_memory(
-                         .clk(clk),
+                         .clk(clk_cpu),
                          .sel(ram_valid),
                          .wen(ram_wstrb),
                          .address(mem_addr[11:0]),
@@ -111,12 +121,13 @@ module soc_top
                          .rdata(ram_data_out)
                          );
 
+   // SPI Flash READ
    spi_flash_read
      #(
        .FLASH_BASE_ADDRESS(SPI_FLASH_BASE)
        )
    spi_flash_read (
-                   .clk(clk),
+                   .clk(clk_cpu),
                    .n_reset(n_reset),
                    .start(sfr_start),
                    .address(sfr_address),
@@ -130,6 +141,7 @@ module soc_top
                    .spi_miso(spi_miso)
                    );
 
+   // PICORV32
    parameter [0:0] BARREL_SHIFTER = 1;
    parameter [0:0] ENABLE_MUL = 1;
    parameter [0:0] ENABLE_DIV = 1;
@@ -142,6 +154,8 @@ module soc_top
    parameter [31:0]  STACKADDR = (4*MEM_WORDS);       // end of memory
    parameter [31:0]  PROGADDR_RESET = 32'h 0000_0000;
    parameter [31:0]  PROGADDR_IRQ = 32'h 0000_0000;
+
+   assign irq = 32'h0;
 
    picorv32
      #(
@@ -158,7 +172,7 @@ module soc_top
        .ENABLE_IRQ_QREGS(ENABLE_IRQ_QREGS)
        )
    cpu (
-        .clk         (clk        ),
+        .clk         (clk_cpu        ),
         .resetn      (n_reset    ),
         .mem_valid   (mem_valid  ),
         .mem_instr   (mem_instr  ),
@@ -187,17 +201,67 @@ module soc_top
         .trace_data  ()
         );
 
+   // LED
+   assign led = led_reg;
+
+   always @ (posedge clk_cpu, negedge n_reset)
+     begin
+        if (!n_reset)
+          begin
+             led_reg <= 6'h0;
+          end
+        else
+          begin
+             if (led_wstrb)
+               begin
+                  led_reg <= ~mem_wdata[5:0];
+               end
+          end
+     end
+
+   // UART
+   assign uart_tx_data = mem_wdata[7:0];
+
    uart_tx #(
              .UART_CLK_HZ(UART_CLOCK_HZ),
              .BAUD_RATE(UART_BAUD)
              )
    uart_tx (
-            .clk(clk),
+            .clk(clk_cpu),
             .rst_n(n_reset),
             .tx_data(uart_tx_data),
             .tx_data_valid(uart_wstrb),
             .tx_data_ready(uart_tx_data_ready),
             .tx_pin(uart_tx_pin)
             );
+
+   // VIDEO
+   assign video_data_out = 32'b0;
+
+   always @ (posedge clk_cpu, negedge n_reset)
+     begin
+        if (!n_reset)
+          begin
+             rgb_data <= 24'h0;
+          end
+        else
+          begin
+             if (video_wstrb)
+               begin
+                  rgb_data <= mem_wdata[23:0];
+               end
+          end
+     end
+
+   dvi_generator dvi_gen(.clk_pixel(clk_pixel),
+                         .n_reset(n_reset),
+                         .rgb_data(rgb_data),
+                         .tmds_r(tmds_r),
+                         .tmds_g(tmds_g),
+                         .tmds_b(tmds_b),
+                         .xpos(xpos),
+                         .ypos(ypos),
+                         .line_end(line_end),
+                         .frame_end(frame_end));
 
   endmodule
