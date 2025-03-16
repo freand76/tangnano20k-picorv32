@@ -51,11 +51,6 @@ module soc_top
    logic [5:0]   led_reg;
 
    // VIDEO
-   reg [23:0]    rgb_data;
-   wire [9:0]    xpos;
-   wire [9:0]    ypos;
-   wire          line_end;
-   wire          frame_end;
    wire [31:0]   video_data_out;
 
    // RAM
@@ -65,7 +60,7 @@ module soc_top
    wire [3:0]    ram_wstrb;
    wire          led_wstrb;
    wire          uart_wstrb;
-   wire          video_wstrb;
+   wire [3:0]    video_wstrb;
 
    // ADDRESS DECODER
    wire          sfr_valid;
@@ -83,9 +78,9 @@ module soc_top
    // ADDRESS DECODER
    assign sfr_valid = mem_addr[31:24] == 8'h00;
    assign ram_valid = mem_addr[31:24] == 8'h01;
+   assign video_valid = mem_addr[31:24] == 8'hf0;
    assign led_valid = mem_addr[31:24] == 8'hfe;
    assign uart_valid = mem_addr[31:24] == 8'hff;
-   assign video_valid = mem_addr[31:24] == 8'hf0;
 
    assign mem_rdata = uart_valid ? { 31'b0, uart_tx_data_ready } :
                       sfr_valid ? sfr_data_out :
@@ -109,7 +104,7 @@ module soc_top
    assign uart_wstrb = mem_wstrb[0] & uart_valid;
    assign ram_wstrb = ram_valid ? mem_wstrb : 4'b0000;
    assign led_wstrb = mem_wstrb[0] & led_valid;
-   assign video_wstrb = mem_wstrb[0] & video_valid;
+   assign video_wstrb = video_valid ? mem_wstrb : 4'b0000;
 
    // RAM MEMORY
    ram_memory ram_memory(
@@ -236,32 +231,16 @@ module soc_top
             );
 
    // VIDEO
-   assign video_data_out = mem_addr[2] ? { 22'b0, ypos } : { 22'b0, xpos };
-
-   always @ (posedge clk_cpu, negedge n_reset)
-     begin
-        if (!n_reset)
-          begin
-             rgb_data <= 24'h0;
-          end
-        else
-          begin
-             if (video_wstrb)
-               begin
-                  rgb_data <= mem_wdata[23:0];
-               end
-          end
-     end
-
-   dvi_generator dvi_gen(.clk_pixel(clk_pixel),
-                         .n_reset(n_reset),
-                         .rgb_data(rgb_data),
-                         .tmds_r(tmds_r),
-                         .tmds_g(tmds_g),
-                         .tmds_b(tmds_b),
-                         .xpos(xpos),
-                         .ypos(ypos),
-                         .line_end(line_end),
-                         .frame_end(frame_end));
+   soc_video soc_video(.clk_cpu(clk_cpu),
+                       .clk_pixel(clk_pixel),
+                       .n_reset(n_reset),
+                       .sel(video_valid),
+                       .wren(video_wstrb),
+                       .address(mem_addr[23:0]),
+                       .video_data_in(mem_wdata),
+                       .video_data_out(video_data_out),
+                       .tmds_r(tmds_r),
+                       .tmds_g(tmds_g),
+                       .tmds_b(tmds_b));
 
   endmodule
