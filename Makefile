@@ -134,3 +134,4 @@ flash-software: $(SW_BUILD_DIR)/flash_content.bin
 .PHONY: clang-format
 clang-format:
 	clang-format -i sw/*.c sw/*.h
+	git status
