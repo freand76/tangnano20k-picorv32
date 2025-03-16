@@ -17,13 +17,31 @@ module tangnano20k_top(
                        output       mspi_di,
                        input        mspi_do);
 
+   wire                             clk_pixel_x5;
+   wire                             clk_pixel;
+   wire                             clk_soc;
+   wire                             pll_lock;
+
+   // pixel_clock_x5 is 126MHz
+   // pixel_clock    is 25.2MHz
+   PLL126 dvi_pll(.clkin_27mhz(sys_clk),
+                  .clkout_126mhz(clk_pixel_x5),
+                  .lock(pll_lock));
+
+   CLKDIV #(.DIV_MODE("5")) clk_div (.CLKOUT(clk_pixel),
+                                     .HCLKIN(clk_pixel_x5),
+                                     .RESETN(pll_lock)
+                                     );
+
+   assign clk_soc = clk_pixel;
+
    // Reset Handler
    logic [15:0]                     start_wait_cnt;
    logic                            n_reset;
 
    always @ (posedge sys_clk)
      begin
-        if (rst)
+        if (rst & !pll_lock)
           begin
              start_wait_cnt <= 0;
              n_reset <= 0;
@@ -39,12 +57,12 @@ module tangnano20k_top(
 
    soc_top
      #(
-       .UART_CLOCK_HZ(27_000_000),
+       .UART_CLOCK_HZ(25_200_000),
        .UART_BAUD(115_200),
        .SPI_FLASH_BASE('h500000)
        )
    soc(
-       .clk(sys_clk),
+       .clk(clk_soc),
        .n_reset(n_reset),
        .uart_tx_pin(uart_tx),
        .led(led),

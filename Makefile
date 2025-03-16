@@ -33,14 +33,6 @@ VERILOG_FILES = \
 	rtl/spi_flash_read.v
 
 ###
-### VERILATOR
-###
-
-.PHONY: lint
-lint:
-	verilator --lint-only $(VERILOG_FILES) --top-module soc_top
-
-###
 ### IVERILOG
 ###
 
@@ -65,7 +57,8 @@ run: $(RTL_BUILD_DIR)/top_vvp MEM.TXT
 CST=tangnano20k.cst
 
 TANGNANO20K_FILES = \
-	rtl/tangnano20k_top.v
+	rtl/tangnano20k/top.v \
+	rtl/tangnano20k/pll126.v
 
 .PHONY: synth
 synth: $(RTL_BUILD_DIR)/top_synth.json
@@ -91,6 +84,14 @@ program-sram-top: $(RTL_BUILD_DIR)/top.fs
 .PHONY: program-flash-top
 program-flash-top: $(RTL_BUILD_DIR)/top.fs
 	openFPGALoader -btangnano20k -f $<
+
+###
+### VERILATOR
+###
+
+.PHONY: lint
+lint:
+	verilator --lint-only $(VERILOG_FILES) $(TANGNANO20K_FILES) --top-module soc_top
 
 ###
 ### SOFTWARE
