@@ -29,7 +29,7 @@ module tangnano20k_top(
              n_reset <= 0;
           end
         else
-          if (start_wait_cnt < 32768)
+          if (start_wait_cnt < 8192)
             begin
                start_wait_cnt <= start_wait_cnt + 1'b1;
             end

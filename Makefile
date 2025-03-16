@@ -117,3 +117,7 @@ MEM.TXT: $(SW_BUILD_DIR)/flash_content.bin
 
 program-flash-code: $(SW_BUILD_DIR)/flash_content.bin
 	openFPGALoader -btangnano20k --external-flash -o 0x500000 $<
+
+.PHONY: clang-format
+clang-format:
+	clang-format -i sw/*.c

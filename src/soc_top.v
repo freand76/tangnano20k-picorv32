@@ -43,7 +43,7 @@ module soc_top
 
    wire [31:0]   ram_data_out;
 
-   wire          ram_wstrb;
+   wire [3:0]    ram_wstrb;
    wire          led_wstrb;
    wire          uart_wstrb;
 
@@ -66,7 +66,7 @@ module soc_top
    assign sfr_address = mem_addr[23:0];
 
    assign uart_wstrb = mem_wstrb[0] & uart_valid;
-   assign ram_wstrb = mem_wstrb[0] & ram_valid;
+   assign ram_wstrb = ram_valid ? mem_wstrb : 4'b0000;
    assign led_wstrb = mem_wstrb[0] & led_valid;
 
    assign mem_ready = sfr_data_strobe || ram_ready || uart_ready || led_ready;
@@ -104,6 +104,7 @@ module soc_top
 
    ram_memory ram_memory(
                          .clk(clk),
+                         .sel(ram_valid),
                          .wen(ram_wstrb),
                          .address(mem_addr[11:0]),
                          .wdata(mem_wdata),

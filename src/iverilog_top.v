@@ -77,7 +77,7 @@ module iverilog_top;
                              uart_byte = { uart_tx_pin, uart_byte[7:1] };
                  end
              #IVERILOG_BIT_CYCLE;
-             $display("%0t: UART DATA: %x ", $time, uart_byte);
+             $display("%0t: UART DATA: %x (%c)", $time, uart_byte, uart_byte);
           end
      end
 
