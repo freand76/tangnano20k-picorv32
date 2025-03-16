@@ -15,6 +15,7 @@ module iverilog_top;
 
    wire        uart_tx_pin;
    wire [5:0]  led;
+   wire [5:0]  led_monitor;
 
    parameter int IVERILOG_CLOCK = 20_000_000;
    parameter int IVERILOG_CLOCK_HALF_CYCLE = (1_000_000_000 / IVERILOG_CLOCK / 2);
@@ -45,10 +46,11 @@ module iverilog_top;
                        .DO(spi_miso),
                        .RESETn(n_reset));
 
+   assign led_monitor = ~led;
    initial
      begin
         $display("Hello, World");
-        $monitor("LED %x", led);
+        $monitor("LED %x", led_monitor);
 
         #10000000
           $finish;
