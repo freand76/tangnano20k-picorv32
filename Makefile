@@ -19,7 +19,7 @@ clean:
 ### FLASH MODEL CAN BE REQUESTED/DOWNLOADED FROM WINBOND
 ###
 
-SPI_FLASH_MDOEL=/projects/W25Q64JVxxIM/W25Q64JVxxIM.v
+SPI_FLASH_MODEL=/projects/W25Q64JVxxIM/W25Q64JVxxIM.v
 
 ###
 ### COMMON FILES
@@ -46,7 +46,7 @@ lint:
 
 IVERILOG_FILES = \
 	rtl/iverilog_top.v \
-	$(SPI_FLASH_MDOEL)
+	$(SPI_FLASH_MODEL)
 
 .PHONY: iverilog
 iverilog: $(RTL_BUILD_DIR)/top_vvp
