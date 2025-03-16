@@ -6,13 +6,13 @@ YOSYS = yosys
 NEXTPNR = nextpnr-himbaechel
 GOWIN_PACK = gowin_pack
 
-BUILD_DIR=out
+RTL_BUILD_DIR=rtl_out
 SW_BUILD_DIR=sw_out
 
 all: iverilog synth
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(RTL_BUILD_DIR)
 	rm -rf $(SW_BUILD_DIR)
 
 ###
@@ -26,11 +26,11 @@ SPI_FLASH_MDOEL=/projects/W25Q64JVxxIM/W25Q64JVxxIM.v
 ###
 
 VERILOG_FILES = \
-	src/soc_top.v \
-	src/picorv32.v \
-	src/uart_tx.v \
-	src/ram_memory.v \
-	src/spi_flash_read.v
+	rtl/soc_top.v \
+	rtl/picorv32.v \
+	rtl/uart_tx.v \
+	rtl/ram_memory.v \
+	rtl/spi_flash_read.v
 
 ###
 ### VERILATOR
@@ -45,18 +45,18 @@ lint:
 ###
 
 IVERILOG_FILES = \
-	src/iverilog_top.v \
+	rtl/iverilog_top.v \
 	$(SPI_FLASH_MDOEL)
 
 .PHONY: iverilog
-iverilog: $(BUILD_DIR)/top_vvp
+iverilog: $(RTL_BUILD_DIR)/top_vvp
 
-$(BUILD_DIR)/top_vvp: $(VERILOG_FILES) $(IVERILOG_FILES)
-	mkdir -p $(BUILD_DIR)
+$(RTL_BUILD_DIR)/top_vvp: $(VERILOG_FILES) $(IVERILOG_FILES)
+	mkdir -p $(RTL_BUILD_DIR)
 	iverilog -g2005-sv -DIVERLOG -o $@ $^
 
-run: $(BUILD_DIR)/top_vvp MEM.TXT
-	vvp $(BUILD_DIR)/top_vvp
+run: $(RTL_BUILD_DIR)/top_vvp MEM.TXT
+	vvp $(RTL_BUILD_DIR)/top_vvp
 
 ###
 ### TANGNANO20K
@@ -65,31 +65,31 @@ run: $(BUILD_DIR)/top_vvp MEM.TXT
 CST=tangnano20k.cst
 
 TANGNANO20K_FILES = \
-	src/tangnano20k_top.v
+	rtl/tangnano20k_top.v
 
 .PHONY: synth
-synth: $(BUILD_DIR)/top_synth.json
+synth: $(RTL_BUILD_DIR)/top_synth.json
 
 .PHONY: pnr
-pnr: $(BUILD_DIR)/top.fs
+pnr: $(RTL_BUILD_DIR)/top.fs
 
-$(BUILD_DIR)/top_synth.json : $(VERILOG_FILES) $(TANGNANO20K_FILES)
-	mkdir -p $(BUILD_DIR)
+$(RTL_BUILD_DIR)/top_synth.json : $(VERILOG_FILES) $(TANGNANO20K_FILES)
+	mkdir -p $(RTL_BUILD_DIR)
 	$(YOSYS) -p "read_verilog -sv $^ ; synth_gowin -json $@"
 
-$(BUILD_DIR)/top_pnr.json : $(BUILD_DIR)/top_synth.json $(CST)
-	mkdir -p $(BUILD_DIR)
+$(RTL_BUILD_DIR)/top_pnr.json : $(RTL_BUILD_DIR)/top_synth.json $(CST)
+	mkdir -p $(RTL_BUILD_DIR)
 	$(NEXTPNR) --json $< --write $@ --device GW2AR-LV18QN88C8/I7 --vopt family=GW2A-18C --vopt cst=$(CST)
 
-$(BUILD_DIR)/top.fs: $(BUILD_DIR)/top_pnr.json
+$(RTL_BUILD_DIR)/top.fs: $(RTL_BUILD_DIR)/top_pnr.json
 	$(GOWIN_PACK) -d GW2A-18C -o $@ $<
 
 .PHONY: program-sram-top
-program-sram-top: $(BUILD_DIR)/top.fs
+program-sram-top: $(RTL_BUILD_DIR)/top.fs
 	openFPGALoader -btangnano20k -m $<
 
 .PHONY: program-flash-top
-program-flash-top: $(BUILD_DIR)/top.fs
+program-flash-top: $(RTL_BUILD_DIR)/top.fs
 	openFPGALoader -btangnano20k -f $<
 
 ###
