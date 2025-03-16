@@ -24,18 +24,39 @@ module tmds_channel
 
    logic signed [4:0]  acc = 5'sd0;
 
+   // verilator lint_off UNOPTFLAT
    logic [8:0]         q_m;
+   // verilator lint_off UNOPTFLAT
+
    logic [9:0]         q_out;
    logic [9:0]         video_coding;
    assign video_coding = q_out;
 
    logic [3:0]         N1D;
+   logic [3:0]         q_sum;
    logic signed [4:0]  N1q_m07;
    logic signed [4:0]  N0q_m07;
    always @ (*)
      begin
-        N1D = video_data[0] + video_data[1] + video_data[2] + video_data[3] + video_data[4] + video_data[5] + video_data[6] + video_data[7];
-        case(q_m[0] + q_m[1] + q_m[2] + q_m[3] + q_m[4] + q_m[5] + q_m[6] + q_m[7])
+        N1D = {3'b000, video_data[0]} +
+              {3'b000, video_data[1]} +
+              {3'b000, video_data[2]} +
+              {3'b000, video_data[3]} +
+              {3'b000, video_data[4]} +
+              {3'b000, video_data[5]} +
+              {3'b000, video_data[6]} +
+              {3'b000, video_data[7]};
+
+        q_sum = {3'b000, q_m[0]} +
+                {3'b000, q_m[1]} +
+                {3'b000, q_m[2]} +
+                {3'b000, q_m[3]} +
+                {3'b000, q_m[4]} +
+                {3'b000, q_m[5]} +
+                {3'b000, q_m[6]} +
+                {3'b000, q_m[7]};
+
+        case(q_sum)
           4'b0000: N1q_m07 = 5'sd0;
           4'b0001: N1q_m07 = 5'sd1;
           4'b0010: N1q_m07 = 5'sd2;
@@ -166,6 +187,7 @@ module tmds_channel
           3'd2: tmds <= 0;
           3'd3: tmds <= 0;
           3'd4: tmds <= 0;
+          default: tmds <= 0;
         endcase
      end
 
