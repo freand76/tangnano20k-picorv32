@@ -13,11 +13,8 @@ module ram_memory(
    reg [31:0]                   mem [0:512];
    wire [31:0]                  mem_data;
 
+   assign rdata = mem_data;
    assign mem_data = mem[address[11:2]];
-
-   assign rdata = (address[1:0] == 2'b00) ? mem_data :
-                  (address[1:0] == 2'b01) ? { 8'b0, mem_data[31:8] } :
-                  (address[1:0] == 2'b10) ? { 16'b0, mem_data[31:16] } : { 24'b0, mem_data[31:24] };
 
    always @(*)
      begin
