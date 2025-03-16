@@ -21,22 +21,24 @@ module soc_video(input clk_pixel,
    wire                        line_end;
    wire                        frame_end;
 
-   assign video_data_out = address[2] ? { 22'b0, ypos } : { 22'b0, xpos };
+   assign video_data_out = !address[23] & address[2] ? { 22'b0, ypos } : { 22'b0, xpos };
 
-   always @ (posedge clk_cpu, negedge n_reset)
+   wire [7:0] character_data;
+
+   always @ (posedge clk_pixel)
      begin
-        if (!n_reset)
-          begin
-             rgb_data <= 24'h0;
-          end
-        else
-          begin
-             if (wren != 4'b0000)
-               begin
-                  rgb_data <= video_data_in[23:0];
-               end
-          end
+        rgb_data <= { character_data, character_data, character_data };
      end
+
+   character_ram character_ram(
+                               .clk(clk_cpu),
+                               .sel(address[23] & address[22] & address[22] & address[20]),
+                               .wren(wren),
+                               .waddr(address[10:0]),
+                               .wdata(video_data_in),
+                               .raddr({xpos, 1'b0}),
+                               .rdata(character_data)
+                               );
 
    dvi_generator dvi_gen(.clk_pixel(clk_pixel),
                          .n_reset(n_reset),
@@ -50,3 +52,42 @@ module soc_video(input clk_pixel,
                          .frame_end(frame_end));
 
 endmodule // soc_video
+
+module character_ram(
+                     input        clk,
+                     input        sel,
+                     input [3:0]  wren,
+                     input [10:0] waddr,
+                     input [31:0] wdata,
+                     input [10:0] raddr,
+                     output [7:0] rdata
+                     );
+
+   reg [7:0]                      mem [0:2047];
+   wire [7:0]                     mem_data;
+
+   assign rdata = mem[raddr];
+
+   always @(posedge clk)
+     begin
+        if (sel)
+          begin
+             if(wren != 4'b0000)
+               begin
+                  $display("Character RAM write %x to %x (%b)", wdata, waddr, wren);
+               end
+
+             case(wren)
+               4'b0010 :
+                 mem[{waddr[10:2], 2'b01}] <= { wdata[15:8] };
+               4'b0100 :
+                 mem[{waddr[10:2], 2'b10}] <= { wdata[23:16] };
+               4'b1000 :
+                 mem[{waddr[10:2], 2'b11}] <= { wdata[31:24] };
+               default:
+                 mem[{waddr[10:2], 2'b00}] <= { wdata[7:0] };
+             endcase // case (wen)
+          end // if (sel)
+     end
+
+endmodule
