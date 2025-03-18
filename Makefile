@@ -48,7 +48,7 @@ iverilog: $(RTL_BUILD_DIR)/top_vvp
 
 $(RTL_BUILD_DIR)/top_vvp: $(VERILOG_FILES) $(IVERILOG_FILES)
 	mkdir -p $(RTL_BUILD_DIR)
-	iverilog -g2005-sv -DIVERLOG -o $@ $^
+	iverilog -g2005-sv -DIVERILOG -o $@ $^
 
 .PHONY: run
 run: $(RTL_BUILD_DIR)/top_vvp MEM.TXT
@@ -65,7 +65,7 @@ iverilog_video: $(RTL_BUILD_DIR)/video_vvp
 
 $(RTL_BUILD_DIR)/video_top_vvp: $(IVERILOG_VIDEO_FILES)
 	mkdir -p $(RTL_BUILD_DIR)
-	iverilog -g2005-sv -DIVERLOG -o $@ $^
+	iverilog -g2005-sv -DIVERILOG -o $@ $^
 
 .PHONY: video_run
 video_run: $(RTL_BUILD_DIR)/video_top_vvp

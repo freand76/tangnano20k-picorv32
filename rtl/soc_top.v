@@ -241,10 +241,7 @@ module soc_top
                        .video_data_out(video_data_out),
                        .tmds_r(tmds_r),
                        .tmds_g(tmds_g),
-                       .tmds_b(tmds_b),
-                       .dbg_xpos(),
-                       .dbg_ypos(),
-                       .dbg_pixel()
+                       .tmds_b(tmds_b)
                        );
 
   endmodule

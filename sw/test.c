@@ -14,10 +14,18 @@ int main(void) {
     uint8_t *ram = (uint8_t *)0x01000000;
 
     volatile uint8_t *character_ram = (uint8_t *)0xf0f00000;
+    volatile uint8_t *font_ram = (uint8_t *)0xf0e00000;
 
-    for (uint8_t idx = 0; idx < 255; idx++) {
-        character_ram[idx] = idx;
-    }
+    character_ram[0] = 0;
+
+    font_ram[0] = 0x7e;
+    font_ram[1] = 0x81;
+    font_ram[2] = 0x81;
+    font_ram[3] = 0x81;
+    font_ram[4] = 0x81;
+    font_ram[5] = 0x81;
+    font_ram[6] = 0x7e;
+    font_ram[7] = 0x00;
 
     *ram32 = 0x00000000;
 
