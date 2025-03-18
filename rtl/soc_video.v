@@ -1,19 +1,29 @@
 `timescale 1ns / 1ns
 `default_nettype none
 
-module soc_video(input clk_pixel,
-                 input         clk_cpu,
-                 input         n_reset,
+module soc_video  #(
+                    parameter START_X = 0, // FOR DEBUG PUPROSES
+                    parameter START_Y = 0  // FOR DEBUG PUPROSES
+                    )
+   (
+    input         clk_pixel,
+    input         clk_cpu,
+    input         n_reset,
 
-                 input         sel,
-                 input [3:0]   wren,
-                 input [23:0]  address,
-                 input [31:0] video_data_in,
-                 output [31:0] video_data_out,
+    input         sel,
+    input [3:0]   wren,
+    input [23:0]  address,
+    input [31:0]  video_data_in,
+    output [31:0] video_data_out,
 
-                 output [9:0]  tmds_r,
-                 output [9:0]  tmds_g,
-                 output [9:0]  tmds_b);
+    output [9:0]  tmds_r,
+    output [9:0]  tmds_g,
+    output [9:0]  tmds_b,
+
+    output [9:0]  dbg_xpos,
+    output [9:0]  dbg_ypos,
+    output        dbg_pixel
+    );
 
    reg [23:0]                  rgb_data;
    wire [9:0]                  xpos;
@@ -22,6 +32,10 @@ module soc_video(input clk_pixel,
    wire                        frame_end;
 
    assign video_data_out = !address[23] & address[2] ? { 22'b0, ypos } : { 22'b0, xpos };
+
+   assign dbg_xpos = xpos;
+   assign dbg_ypos = ypos;
+   assign dbg_pixel = 1'b0;
 
    wire [7:0] character_data;
 
@@ -40,16 +54,23 @@ module soc_video(input clk_pixel,
                                .rdata(character_data)
                                );
 
-   dvi_generator dvi_gen(.clk_pixel(clk_pixel),
-                         .n_reset(n_reset),
-                         .rgb_data(rgb_data),
-                         .tmds_r(tmds_r),
-                         .tmds_g(tmds_g),
-                         .tmds_b(tmds_b),
-                         .xpos(xpos),
-                         .ypos(ypos),
-                         .line_end(line_end),
-                         .frame_end(frame_end));
+   dvi_generator
+     #(
+       .START_X(START_X),
+       .START_Y(START_Y)
+       )
+   dvi_gen (
+            .clk_pixel(clk_pixel),
+            .n_reset(n_reset),
+            .rgb_data(rgb_data),
+            .tmds_r(tmds_r),
+            .tmds_g(tmds_g),
+            .tmds_b(tmds_b),
+            .xpos(xpos),
+            .ypos(ypos),
+            .line_end(line_end),
+            .frame_end(frame_end)
+            );
 
 endmodule // soc_video
 

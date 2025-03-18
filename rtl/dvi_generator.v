@@ -1,16 +1,23 @@
 `timescale 1ns / 1ns
 `default_nettype none
 
-module dvi_generator(input clk_pixel,
-                     input            n_reset,
-                     input [23:0]     rgb_data,
-                     output [9:0]     tmds_r,
-                     output [9:0]     tmds_g,
-                     output [9:0]     tmds_b,
-                     output reg [9:0] xpos,
-                     output reg [9:0] ypos,
-                     output           line_end,
-                     output           frame_end);
+module dvi_generator
+  #(
+    parameter START_X = 0, // FOR DEBUG PUPROSES
+    parameter START_Y = 0  // FOR DEBUG PUPROSES
+    )
+   (
+    input            clk_pixel,
+    input            n_reset,
+    input [23:0]     rgb_data,
+    output [9:0]     tmds_r,
+    output [9:0]     tmds_g,
+    output [9:0]     tmds_b,
+    output reg [9:0] xpos,
+    output reg [9:0] ypos,
+    output           line_end,
+    output           frame_end
+    );
 
    localparam                         FRAME_WIDTH = 800;
    localparam                         FRAME_HEIGHT = 525;
@@ -59,8 +66,8 @@ module dvi_generator(input clk_pixel,
      begin
         if (!n_reset)
           begin
-             xpos <= 0;
-             ypos <= 0;
+             xpos <= START_X;
+             ypos <= START_Y;
           end
         else
           begin

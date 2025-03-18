@@ -50,8 +50,26 @@ $(RTL_BUILD_DIR)/top_vvp: $(VERILOG_FILES) $(IVERILOG_FILES)
 	mkdir -p $(RTL_BUILD_DIR)
 	iverilog -g2005-sv -DIVERLOG -o $@ $^
 
+.PHONY: run
 run: $(RTL_BUILD_DIR)/top_vvp MEM.TXT
 	vvp $(RTL_BUILD_DIR)/top_vvp
+
+IVERILOG_VIDEO_FILES = \
+	rtl/iverilog_video_top.v \
+	rtl/dvi_generator.v \
+	rtl/tmds_channel.v \
+	rtl/soc_video.v
+
+.PHONY: iverilog_video
+iverilog_video: $(RTL_BUILD_DIR)/video_vvp
+
+$(RTL_BUILD_DIR)/video_top_vvp: $(IVERILOG_VIDEO_FILES)
+	mkdir -p $(RTL_BUILD_DIR)
+	iverilog -g2005-sv -DIVERLOG -o $@ $^
+
+.PHONY: video_run
+video_run: $(RTL_BUILD_DIR)/video_top_vvp
+	vvp $(RTL_BUILD_DIR)/video_top_vvp
 
 ###
 ### TANGNANO20K
