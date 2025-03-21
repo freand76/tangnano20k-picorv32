@@ -19,7 +19,7 @@ module iverilog_top;
    // VIDEO
    soc_video #(
                .START_X(0),
-               .START_Y(510)
+               .START_Y(460)
                )
    soc_video (
               .clk_cpu(clk),
@@ -65,16 +65,26 @@ module iverilog_top;
      begin
         $display("Hello, Video World");
         #2000;
-        for (i = 0; i < 256; i = i + 1)
+        for (i = 0; i < 2048; i = i + 1)
           begin
              write_video(24'hf00000 + i, 8'h00);
           end
-        write_video(24'he00000, 8'h11);
-        write_video(24'he00001, 8'h22);
-        write_video(24'he00002, 8'h33);
-        write_video(24'he00003, 8'h44);
-        #700000
-          $finish;
+        write_video(24'hf00000, 8'h02);
+        write_video(24'hf00028, 8'hff);
+
+        write_video(24'he00000, 8'hf1);
+        write_video(24'he00001, 8'he1);
+        write_video(24'he00008, 8'hd1);
+        write_video(24'he00009, 8'hc1);
+        write_video(24'he00010, 8'hb1);
+        write_video(24'he00011, 8'h91);
+        write_video(24'he00018, 8'h81);
+        write_video(24'he00019, 8'h71);
+        $display("FRAME write done");
+        forever
+          #2200000;
+        
+        $finish;
      end
 
    initial

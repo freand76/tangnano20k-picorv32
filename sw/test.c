@@ -17,15 +17,49 @@ int main(void) {
     volatile uint8_t *font_ram = (uint8_t *)0xf0e00000;
 
     character_ram[0] = 0;
+    character_ram[1] = 1;
+    character_ram[2] = 2;
+    character_ram[3] = 3;
 
-    font_ram[0] = 0x7e;
-    font_ram[1] = 0x81;
-    font_ram[2] = 0x81;
-    font_ram[3] = 0x81;
-    font_ram[4] = 0x81;
-    font_ram[5] = 0x81;
-    font_ram[6] = 0x7e;
-    font_ram[7] = 0x00;
+    character_ram[64] = 1;
+    character_ram[128] = 2;
+    character_ram[192] = 3;
+
+    font_ram[0] = 0;
+    font_ram[1] = 0;
+    font_ram[2] = 0;
+    font_ram[3] = 0x18;
+    font_ram[4] = 0x18;
+    font_ram[5] = 0;
+    font_ram[6] = 0;
+    font_ram[7] = 0;
+
+    font_ram[8] = 0x00;
+    font_ram[9] = 0x3c;
+    font_ram[10] = 0x66;
+    font_ram[11] = 0x7e;
+    font_ram[12] = 0x66;
+    font_ram[13] = 0x66;
+    font_ram[14] = 0x66;
+    font_ram[15] = 0x00;
+
+    font_ram[16] = 0x00;
+    font_ram[17] = 0x7e;
+    font_ram[18] = 0x7e;
+    font_ram[19] = 0x7e;
+    font_ram[20] = 0x7e;
+    font_ram[21] = 0x7e;
+    font_ram[22] = 0x7e;
+    font_ram[23] = 0x7e;
+
+    font_ram[24] = 0x00;
+    font_ram[25] = 0x18;
+    font_ram[26] = 0x18;
+    font_ram[27] = 0x18;
+    font_ram[28] = 0x18;
+    font_ram[29] = 0x18;
+    font_ram[30] = 0x18;
+    font_ram[31] = 0x00;
 
     *ram32 = 0x00000000;
 

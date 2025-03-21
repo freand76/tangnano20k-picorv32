@@ -16,7 +16,8 @@ module dvi_generator
     output reg [9:0] xpos,
     output reg [9:0] ypos,
     output           line_end,
-    output           frame_end
+    output           frame_end,
+    output           active
     );
 
    localparam                         FRAME_WIDTH = 800;
@@ -33,8 +34,9 @@ module dvi_generator
 
    logic                              hsync, vsync;
 
-   assign line_end  = (xpos == SCREEN_WIDTH-1'b1) && (ypos < SCREEN_HEIGHT-1'b1);
+   assign line_end  = (xpos == SCREEN_WIDTH-1'b1) && (ypos <= SCREEN_HEIGHT-1'b1);
    assign frame_end = (xpos == SCREEN_WIDTH-1'b1) && (ypos == SCREEN_HEIGHT-1'b1);
+   assign active = xpos < SCREEN_WIDTH && ypos < SCREEN_HEIGHT;
 
    always @ (*)
      begin
@@ -56,7 +58,7 @@ module dvi_generator
         if (!n_reset)
           video_data_period <= 0;
         else
-          video_data_period <= xpos < SCREEN_WIDTH && ypos < SCREEN_HEIGHT;
+          video_data_period <= active;
      end
 
    logic [2:0] mode = 3'd1;

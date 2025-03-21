@@ -1,6 +1,15 @@
 `timescale 1ns / 1ns
 `default_nettype none
 
+// update      X 1 0
+// update_dly1 X 0 1
+// update_dly2 X 0 0 1
+// char_x      X 0 0 0
+// char_y      X 0 0 0
+// char_ram    X X D D
+// font_ram    X X X D
+
+
 module soc_video  #(
                     parameter START_X = 0, // FOR DEBUG PUPROSES
                     parameter START_Y = 0  // FOR DEBUG PUPROSES
@@ -21,29 +30,79 @@ module soc_video  #(
     output [9:0]  tmds_b
     );
 
-   wire [23:0]                  rgb_data;
-   wire [9:0]                  xpos;
-   wire [9:0]                  ypos;
-   wire                        line_end;
-   wire                        frame_end;
-   wire [7:0]                  character_ram_out, font_ram_out;
-   reg [7:0]                   pixel_data;
+   wire [23:0]    rgb_data;
+   wire [9:0]     xpos;
+   wire [9:0]     ypos;
+   wire           line_end;
+   wire           frame_end;
+   wire           active;
+   wire [7:0]     character_ram_out, font_ram_out;
+   reg [7:0]      pixel_data;
 
    assign video_data_out = !address[23] & address[2] ? { 22'b0, ypos } : { 22'b0, xpos };
 
+   reg [5:0]      char_x;
+   reg [4:0]      char_y;
+   reg [2:0]      font_line;
+   reg [7:0]      font_data;
+
+   reg            update, update_dly1, update_dly2;
+
+   wire           frame;
+   wire [10:0] char_address = {char_y, char_x};
+   wire [10:0] font_address = { character_ram_out, font_line };
+
+   assign frame = (ypos == 0) || (ypos == 479) || (xpos == 2) || (xpos == 641);
+   assign rgb_data = frame ? 24'hff0000 : { 8'h0, {8{pixel_data[7]}}, 8'h0 };
+
    always @ (posedge clk_pixel)
      begin
-        if (xpos[3:0] == 4'b0000)
+        update <= 0;
+        update_dly1 <= update;
+        update_dly2 <= update_dly1;
+
+        if (frame_end)
           begin
-             pixel_data <= font_ram_out;
+             char_x <= 6'h0;
+             char_y <= 5'h0;
+             font_line <= 3'h0;
+             update <= 1;
           end
-        else if (xpos[0] == 1'b0)
+        else if (line_end)
+          begin
+             char_x <= 6'h0;
+             update <= 1;
+             if (ypos[3:0] == 4'b1111)
+               begin
+                  char_x <= 6'h0;
+                  char_y <= char_y + 5'h1;
+                  font_line <= 3'h0;
+               end
+             else if (ypos[0] == 1'b1)
+               begin
+                  font_line <= font_line + 1;
+               end
+          end
+        else if (active && (xpos[3:0] == 4'b0000))
+          begin
+             char_x <= char_x + 6'h1;
+             update <= 1;
+          end
+
+        if (update_dly2)
+          begin
+             font_data <= font_ram_out;
+          end
+
+        if (active && (xpos[3:0] == 4'b0000))
+          begin
+             pixel_data <= font_data;
+          end
+        else if (active && (xpos[0] == 1'b0))
           begin
              pixel_data <= { pixel_data[6:0], 1'b0 };
           end
      end
-
-   assign  rgb_data = { 8'h0, {8{pixel_data[7]}}, 8'h0 };
 
    ram2048x8 #(
                .NAME("Char")
@@ -56,20 +115,9 @@ module soc_video  #(
                  .wren(wren),
                  .waddr(address[10:0]),
                  .wdata(video_data_in),
-                 .raddr({ypos[8:4], xpos[9:4]}),
+                 .raddr(char_address),
                  .rdata(character_ram_out)
                  );
-
-   wire [10:0] font_address = { character_ram_out, ypos[3:1] };
-
-`ifdef IVERILOG
-   initial
-     begin
-        $monitor("OUT (%d,%d)=%b", xpos, ypos, pixel_data);
-        forever
-          #1000;
-     end
-`endif // DEBUG_VIDEO
 
    ram2048x8  #(
                .NAME("Font")
@@ -101,7 +149,8 @@ module soc_video  #(
             .xpos(xpos),
             .ypos(ypos),
             .line_end(line_end),
-            .frame_end(frame_end)
+            .frame_end(frame_end),
+            .active(active)
             );
 
 endmodule // soc_video
@@ -130,14 +179,20 @@ module ram2048x8
                           wren == 4'b1000 ? { waddr[10:2], 2'b11 } : { waddr[10:2], 2'b00 };
 
    assign write_data = wren == 4'b0010 ? wdata[15:8] :
-                       wren == 4'b0010 ? wdata[23:16] :
-                       wren == 4'b0010 ? wdata[31:24] : wdata[7:0];
+                       wren == 4'b0100 ? wdata[23:16] :
+                       wren == 4'b1000 ? wdata[31:24] : wdata[7:0];
 
 `ifdef IVERILOG
    reg [7:0]                      mem [0:2047];
    wire [7:0]                     mem_data;
+   reg [7:0]                      read_latency;
 
-   assign rdata = mem[raddr[10:0]];
+   assign rdata = read_latency;
+
+   always @(posedge rclk)
+     begin
+        read_latency <= mem[raddr[10:0]];
+     end
 
    always @(posedge wclk)
      begin
@@ -181,10 +236,10 @@ module ram2048x8
         .RESETB(!n_reset)
     );
 `ifndef VERILATOR
-    defparam mem.READ_MODE0 = 1'b1;
-    defparam mem.READ_MODE1 = 1'b1;
-    defparam mem.WRITE_MODE0 = 2'b01;
-    defparam mem.WRITE_MODE1 = 2'b01;
+    defparam mem.READ_MODE0 = 1'b0;
+    defparam mem.READ_MODE1 = 1'b0;
+    defparam mem.WRITE_MODE0 = 2'b00;
+    defparam mem.WRITE_MODE1 = 2'b00;
     defparam mem.BIT_WIDTH_0 = 8;
     defparam mem.BIT_WIDTH_1 = 8;
     defparam mem.BLK_SEL_0 = 3'b000;
