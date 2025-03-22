@@ -36,8 +36,8 @@ _start:
     addi x30, zero, 0
     addi x31, zero, 0
 
-    lui sp, %hi(0x01000800)
-    add sp, sp, %lo(0x01000800)
+    lui sp, %hi(0x01002000)
+    add sp, sp, %lo(0x01002000)
 
     jal ra, main
 

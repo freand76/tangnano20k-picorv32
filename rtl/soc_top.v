@@ -108,10 +108,10 @@ module soc_top
 
    // RAM MEMORY
    ram_memory ram_memory(
-                         .clk(clk_cpu),
+                         .clk_cpu(clk_cpu),
                          .sel(ram_valid),
                          .wen(ram_wstrb),
-                         .address(mem_addr[10:0]),
+                         .address(mem_addr[12:0]),
                          .wdata(mem_wdata),
                          .rdata(ram_data_out)
                          );
