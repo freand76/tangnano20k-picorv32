@@ -41,12 +41,12 @@ VERILOG_FILES = \
 
 IVERILOG_FILES = \
 	rtl/iverilog_top.v \
-	$(SPI_FLASH_MODEL)
+	submodules/gowin_fpga_sim_models/rtl_sim/dpb_sim.v
 
 .PHONY: iverilog
 iverilog: $(RTL_BUILD_DIR)/top_vvp
 
-$(RTL_BUILD_DIR)/top_vvp: $(VERILOG_FILES) $(IVERILOG_FILES)
+$(RTL_BUILD_DIR)/top_vvp: $(VERILOG_FILES) $(IVERILOG_FILES) $(SPI_FLASH_MODEL)
 	mkdir -p $(RTL_BUILD_DIR)
 	iverilog -g2005-sv -DIVERILOG -o $@ $^
 
@@ -56,6 +56,7 @@ run: $(RTL_BUILD_DIR)/top_vvp MEM.TXT
 
 IVERILOG_VIDEO_FILES = \
 	rtl/iverilog_video_top.v \
+	submodules/gowin_fpga_sim_models/rtl_sim/dpb_sim.v \
 	rtl/dvi_generator.v \
 	rtl/tmds_channel.v \
 	rtl/soc_video.v
@@ -110,9 +111,24 @@ program-flash-top: $(RTL_BUILD_DIR)/top.fs
 ### VERILATOR
 ###
 
+EXTRA_VERILATOR_FILES = \
+	submodules/gowin_fpga_sim_models/rtl_sim/dpb_sim.v
+
 .PHONY: lint
-lint:
-	verilator --lint-only $(VERILOG_FILES) $(TANGNANO20K_FILES) --top-module soc_top
+lint: tangenano_lint iverilog_top_lint video_lint
+
+.PHONY: tangenano_lint
+tangenano_lint:
+	verilator --lint-only $(VERILOG_FILES) $(EXTRA_VERILATOR_FILES) $(TANGNANO20K_FILES) --top-module soc_top
+
+.PHONY: iverilog_top_lint
+iverilog_top_lint:
+	verilator --lint-only $(VERILOG_FILES) $(IVERILOG_FILES) --timing --top-module iverilog_top
+
+.PHONY: video_lint
+video_lint:
+	verilator --lint-only $(IVERILOG_VIDEO_FILES) --timing --top-module iverilog_top
+
 
 ###
 ### SOFTWARE

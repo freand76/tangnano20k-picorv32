@@ -182,60 +182,32 @@ module ram2048x8
                        wren == 4'b0100 ? wdata[23:16] :
                        wren == 4'b1000 ? wdata[31:24] : wdata[7:0];
 
-`ifdef IVERILOG
-   reg [7:0]                      mem [0:2047];
-   wire [7:0]                     mem_data;
-   reg [7:0]                      read_latency;
-
-   assign rdata = read_latency;
-
-   always @(posedge rclk)
-     begin
-        read_latency <= mem[raddr[10:0]];
-     end
-
-   always @(posedge wclk)
-     begin
-        if (sel)
-          begin
-             if(wren != 4'b0000)
-               begin
-                  $display("%s RAM write %x to %x (%b)", NAME, wdata, waddr, wren);
-                  mem[write_address] <= write_data;
-               end
-          end // if (sel)
-     end // always @ (posedge clk)
-
-`else // !`ifdef IVERILOG
-
     wire gnd, vcc;
     assign gnd = 1'b0;
     assign vcc = 1'b1;
 
     wire [7:0] dummy;
 
-   // verilator lint_off UNOPTFLAT
-
     DPB mem(
-        .DOB({dummy, rdata}),
-        .DIA({{8{gnd}}, write_data}),
-        .DIB({16{gnd}}),
-        .ADA({write_address, gnd, gnd, gnd}),
-        .ADB({raddr, gnd, gnd, gnd}),
-        .CLKA(wclk),
-        .CLKB(rclk),
-        .OCEA(vcc),
-        .OCEB(vcc),
-        .CEA(vcc),
-        .CEB(vcc),
-        .WREA(sel & (wren[0] | wren[1] | wren[2] | wren[3])),
-        .WREB(gnd),
-        .BLKSELA(3'b000),
-        .BLKSELB(3'b000),
-        .RESETA(!n_reset),
-        .RESETB(!n_reset)
-    );
-`ifndef VERILATOR
+            .DOA(),
+            .DOB({dummy, rdata}),
+            .DIA({{8{gnd}}, write_data}),
+            .DIB({16{gnd}}),
+            .ADA({write_address, gnd, gnd, gnd}),
+            .ADB({raddr, gnd, gnd, gnd}),
+            .CLKA(wclk),
+            .CLKB(rclk),
+            .OCEA(vcc),
+            .OCEB(vcc),
+            .CEA(vcc),
+            .CEB(vcc),
+            .WREA(sel & (wren[0] | wren[1] | wren[2] | wren[3])),
+            .WREB(gnd),
+            .BLKSELA(3'b000),
+            .BLKSELB(3'b000),
+            .RESETA(!n_reset),
+            .RESETB(!n_reset)
+            );
     defparam mem.READ_MODE0 = 1'b0;
     defparam mem.READ_MODE1 = 1'b0;
     defparam mem.WRITE_MODE0 = 2'b00;
@@ -245,34 +217,5 @@ module ram2048x8
     defparam mem.BLK_SEL_0 = 3'b000;
     defparam mem.BLK_SEL_1 = 3'b000;
     defparam mem.RESET_MODE = "SYNC";
-`endif //  `ifndef VERILATOR
-
-`endif // !`ifdef IVERILOG
 
 endmodule
-
-`ifdef VERILATOR
-
-module DPB(
-        output [15:0] DOB,
-        input [15:0] DIA,
-        input [15:0] DIB,
-        input [13:0] ADA,
-        input [13:0] ADB,
-        input CLKA,
-        input CLKB,
-        input OCEA,
-        input OCEB,
-        input CEA,
-        input CEB,
-        input WREA,
-        input WREB,
-        input [2:0] BLKSELA,
-        input [2:0] BLKSELB,
-        input RESETA,
-        input RESETB
-           );
-
-endmodule // DPB
-
-`endif

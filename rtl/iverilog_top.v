@@ -31,20 +31,28 @@ module iverilog_top;
        )
    soc(
        .clk_cpu(clk),
+       .clk_pixel(),
        .n_reset(n_reset),
        .uart_tx_pin(uart_tx_pin),
        .led(led),
        .spi_cs(spi_cs),
        .spi_clk(spi_clk),
        .spi_mosi(spi_mosi),
-       .spi_miso(spi_miso)
+       .spi_miso(spi_miso),
+       .tmds_r(),
+       .tmds_g(),
+       .tmds_b()
        );
 
+`ifndef VERILATOR
    W25Q64JVxxIM w25q64(.CSn(spi_cs),
                        .CLK(spi_clk),
                        .DIO(spi_mosi),
                        .DO(spi_miso),
+                       .WPn(),
+                       .HOLDn(),
                        .RESETn(n_reset));
+`endif
 
    assign led_monitor = ~led;
    initial

@@ -59,7 +59,7 @@ module iverilog_top;
     end
    endtask
 
-   int i = 0;
+   logic [23:0]      i;
 
    initial
      begin
@@ -68,6 +68,7 @@ module iverilog_top;
         for (i = 0; i < 2048; i = i + 1)
           begin
              write_video(24'hf00000 + i, 8'h00);
+             write_video(24'he00000 + i, 8'h00);
           end
         write_video(24'hf00000, 8'h02);
         write_video(24'hf00028, 8'hff);
@@ -82,8 +83,7 @@ module iverilog_top;
         write_video(24'he00019, 8'h71);
         $display("FRAME write done");
         forever
-          #2200000;
-        
+          #10000000
         $finish;
      end
 

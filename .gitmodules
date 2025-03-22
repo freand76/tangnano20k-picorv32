@@ -1,0 +1,3 @@
+[submodule "submodule/gowin_fpga_sim_models"]
+	path = submodules/gowin_fpga_sim_models
+	url = git@github.com:freand76/gowin_fpga_sim_models.git
