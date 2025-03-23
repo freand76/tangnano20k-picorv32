@@ -59,7 +59,6 @@ module iverilog_top;
      begin
         $display("Hello, World");
         $monitor("LED %x", led_monitor);
-
         #10000000
           $finish;
      end

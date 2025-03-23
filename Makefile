@@ -57,6 +57,8 @@ run: $(RTL_BUILD_DIR)/top_vvp MEM.TXT
 
 IVERILOG_VIDEO_FILES = \
 	rtl/iverilog_video_top.v \
+	rtl/ram_memory.v \
+	rtl/dpb_2048x8.v \
 	submodules/gowin_fpga_sim_models/rtl_sim/dpb_sim.v \
 	rtl/dvi_generator.v \
 	rtl/tmds_channel.v \

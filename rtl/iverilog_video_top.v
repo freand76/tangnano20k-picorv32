@@ -3,15 +3,25 @@
 
 module iverilog_top;
 
-   logic clk;
+   logic clk_cpu;
+   logic clk_pixel;
    logic n_reset;
 
-   logic video_valid = 1'b0;
-   logic [3:0] video_wstrb = 4'h0;
-   logic [23:0] video_addr = 24'h0;
-   logic [31:0] data_in = 32'h0;
-   wire [31:0]  data_out;
+   logic ram_valid = 1'b0;
+   logic [3:0] ram_wstrb = 4'h0;
+   logic [23:0] ram_addr = 24'h0;
+   logic [31:0] ram_wdata = 32'h0;
+   wire [31:0]  ram_rdata;
    wire [9:0]   tmds_r, tmds_g, tmds_b;
+
+   wire         video_valid = 0;
+   logic [3:0]  video_wstrb = 4'b0000;
+   logic [23:0] video_addr = 24'h0;
+   logic [31:0] video_data_in = 32'h0;
+   wire [31:0]  video_data_out;
+
+   wire [31:0]  video_raddr;
+   wire [31:0]  video_rdata;
 
    parameter int IVERILOG_CLOCK = 20_000_000;
    parameter int IVERILOG_CLOCK_HALF_CYCLE = (1_000_000_000 / IVERILOG_CLOCK / 2);
@@ -22,41 +32,49 @@ module iverilog_top;
                .START_Y(460)
                )
    soc_video (
-              .clk_cpu(clk),
-              .clk_pixel(clk),
+              .clk_cpu(clk_cpu),
+              .clk_pixel(clk_pixel),
               .n_reset(n_reset),
               .sel(video_valid),
               .wren(video_wstrb),
               .address(video_addr),
-              .video_data_in(data_in),
-              .video_data_out(data_out),
+              .wdata(video_data_in),
+              .rdata(video_data_out),
+              .video_raddr(video_raddr),
+              .video_rdata(video_rdata),
               .tmds_r(tmds_r),
               .tmds_g(tmds_g),
               .tmds_b(tmds_b)
               );
 
-   task write_video;
+   // RAM MEMORY
+   ram_memory ram_memory(
+                         .clk_cpu(clk_cpu),
+                         .clk_pixel(clk_pixel),
+                         .sel(ram_valid),
+                         .wen(ram_wstrb),
+                         .address(ram_addr[15:0]),
+                         .wdata(ram_wdata),
+                         .rdata(ram_rdata),
+                         .video_raddr(video_raddr[15:0]),
+                         .video_rdata(video_rdata)
+                         );
+
+   task write_ram;
       input  [23:0] address;
-      input [7:0]  data;
+      input [31:0]  data;
       begin
-         logic [3:0] wren;
-         case(address[1:0])
-              2'b00 : wren = 4'b0001;
-              2'b01 : wren = 4'b0010;
-              2'b10 : wren = 4'b0100;
-              2'b11 : wren = 4'b1000;
-         endcase // case (address[1:0])
-         data_in = { data, data, data, data};
-         video_addr = address;
-         video_valid = 1;
-         video_wstrb = wren;
-         wait(clk == 1'b0);
-         wait(clk == 1'b1);
-         wait(clk == 1'b0);
-         video_valid = 0;
-         video_wstrb = 4'b0000;
-         video_addr = 24'h0;
-    end
+         ram_valid = 1;
+         ram_wstrb = 4'b1111;
+         ram_addr = address;
+         ram_wdata = data;
+         wait(clk_cpu == 1'b0);
+         wait(clk_cpu == 1'b1);
+         wait(clk_cpu == 1'b0);
+         ram_valid = 0;
+         ram_wstrb = 4'b0000;
+         ram_addr = 24'h0;
+      end
    endtask
 
    logic [23:0]      i;
@@ -67,37 +85,49 @@ module iverilog_top;
         #2000;
         for (i = 0; i < 2048; i = i + 1)
           begin
-             write_video(24'hf00000 + i, 8'h00);
-             write_video(24'he00000 + i, 8'h00);
+             write_ram(24'h000400 + i, 32'h00);
+             write_ram(24'h000800 + i, 32'h00);
           end
-        write_video(24'hf00000, 8'h02);
-        write_video(24'hf00028, 8'hff);
+        write_ram(24'h000400, 32'h03020100);
+        write_ram(24'h000404, 32'h07060504);
 
-        write_video(24'he00000, 8'hf1);
-        write_video(24'he00001, 8'he1);
-        write_video(24'he00008, 8'hd1);
-        write_video(24'he00009, 8'hc1);
-        write_video(24'he00010, 8'hb1);
-        write_video(24'he00011, 8'h91);
-        write_video(24'he00018, 8'h81);
-        write_video(24'he00019, 8'h71);
+        write_ram(24'h000800, 32'h11121314);
+        write_ram(24'h000804, 32'h15161718);
+        write_ram(24'h000808, 32'h21222324);
+        write_ram(24'h00080c, 32'h25262728);
+        write_ram(24'h000810, 32'h31323334);
+        write_ram(24'h000814, 32'h35363738);
+        write_ram(24'h000818, 32'h41424344);
+        write_ram(24'h00081c, 32'h45464748);
+        write_ram(24'h000820, 32'h51525354);
+        write_ram(24'h000824, 32'h55565758);
+        write_ram(24'h000828, 32'h61626364);
+        write_ram(24'h00082c, 32'h65666768);
+        write_ram(24'h000830, 32'h71727374);
+        write_ram(24'h000834, 32'h75767778);
+        write_ram(24'h000838, 32'h81828384);
+        write_ram(24'h00083c, 32'h85868788);
+
         $display("FRAME write done");
-        forever
+        //$monitor("READ %x:%x", video_raddr, video_rdata);
+       forever
           #10000000
         $finish;
      end
 
    initial
      begin
-        clk = 0;
+        clk_cpu = 0;
+        clk_pixel = 0;
         video_wstrb = 4'b0000;
         video_addr = 24'h0;
-        data_in = 32'h0;
+        video_data_in = 32'h0;
         n_reset = 1;
         #20 n_reset = 0;
         #1000 n_reset = 1;
      end
 
-   always #20 clk = ~clk;
+   always #20 clk_cpu = ~clk_cpu;
+   always #22 clk_pixel = ~clk_pixel;
 
 endmodule

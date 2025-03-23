@@ -53,6 +53,9 @@ module soc_top
    // VIDEO
    wire [31:0]   video_data_out;
 
+   wire [31:0]   video_raddr;
+   wire [31:0]   video_rdata;
+
    // RAM
    wire [31:0]   ram_data_out;
 
@@ -109,11 +112,14 @@ module soc_top
    // RAM MEMORY
    ram_memory ram_memory(
                          .clk_cpu(clk_cpu),
+                         .clk_pixel(clk_pixel),
                          .sel(ram_valid),
                          .wen(ram_wstrb),
                          .address(mem_addr[15:0]),
                          .wdata(mem_wdata),
-                         .rdata(ram_data_out)
+                         .rdata(ram_data_out),
+                         .video_raddr(video_raddr[15:0]),
+                         .video_rdata(video_rdata)
                          );
 
    // SPI Flash READ
@@ -237,11 +243,13 @@ module soc_top
                        .sel(video_valid),
                        .wren(video_wstrb),
                        .address(mem_addr[23:0]),
-                       .video_data_in(mem_wdata),
-                       .video_data_out(video_data_out),
+                       .wdata(mem_wdata),
+                       .rdata(video_data_out),
                        .tmds_r(tmds_r),
                        .tmds_g(tmds_g),
-                       .tmds_b(tmds_b)
+                       .tmds_b(tmds_b),
+                       .video_raddr(video_raddr),
+                       .video_rdata(video_rdata)
                        );
 
   endmodule
