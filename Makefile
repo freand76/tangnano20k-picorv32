@@ -33,6 +33,7 @@ VERILOG_FILES = \
 	rtl/dvi_generator.v \
 	rtl/tmds_channel.v \
 	rtl/ram_memory.v \
+	rtl/dpb_2048x8.v \
 	rtl/spi_flash_read.v
 
 ###

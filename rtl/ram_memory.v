@@ -5,103 +5,69 @@ module ram_memory(
                   input         clk_cpu,
                   input         sel,
                   input [3:0]   wen,
-                  input [12:0]  address,
+                  input [15:0]  address,
                   input [31:0]  wdata,
                   output [31:0] rdata
                   );
 
-   wire [7:0]                   dummy_31_24, dummy_23_16, dummy_15_8, dummy_7_0;
+   dpb_2048x8 mem_7_0(
+                      .doa(rdata[7:0]),
+                      .dob(),
+                      .dia(wdata[7:0]),
+                      .dib(8'h0),
+                      .ada(address[15:2]),
+                      .adb(14'h0),
+                      .clka(clk_cpu),
+                      .clkb(1'b0),
+                      .sela(sel),
+                      .selb(1'b1),
+                      .wrea(wen[0]),
+                      .wreb(1'b0)
+                      );
 
-   DPB mem_7_0(
-               .DOA( {dummy_7_0, rdata[7:0]} ),
-               .DOB(),
-               .DIA( {8'h0, wdata[7:0]} ),
-               .DIB(16'h0),
-               .ADA({ address[12:2], 3'h0 }),
-               .ADB(14'h0),
-               .CLKA(clk_cpu),
-               .CLKB(1'b0),
-               .OCEA(1'b1),
-               .OCEB(1'b1),
-               .CEA(sel),
-               .CEB(1'b1),
-               .WREA(wen[0]),
-               .WREB(1'b0),
-               .BLKSELA(3'b000),
-               .BLKSELB(3'b000),
-               .RESETA(1'b0),
-               .RESETB(1'b0)
-               );
-   defparam mem_7_0.BIT_WIDTH_0 = 8;
-   defparam mem_7_0.BIT_WIDTH_1 = 8;
+   dpb_2048x8 mem_15_8(
+                       .doa(rdata[15:8]),
+                       .dob(),
+                       .dia(wdata[15:8]),
+                       .dib(8'h0),
+                       .ada(address[15:2]),
+                       .adb(14'h0),
+                       .clka(clk_cpu),
+                       .clkb(1'b0),
+                       .sela(sel),
+                       .selb(1'b1),
+                       .wrea(wen[1]),
+                       .wreb(1'b0)
+                       );
 
-   DPB mem_15_8(
-                .DOA( {dummy_15_8, rdata[15:8]} ),
-                .DOB(),
-                .DIA( {8'h0, wdata[15:8]} ),
-                .DIB(16'h0),
-                .ADA({ address[12:2], 3'h0 }),
-                .ADB(14'h0),
-                .CLKA(clk_cpu),
-                .CLKB(1'b0),
-                .OCEA(1'b1),
-                .OCEB(1'b1),
-                .CEA(sel),
-                .CEB(1'b1),
-                .WREA(wen[1]),
-                .WREB(1'b0),
-                .BLKSELA(3'b000),
-                .BLKSELB(3'b000),
-                .RESETA(1'b0),
-                .RESETB(1'b0)
-                );
-   defparam mem_15_8.BIT_WIDTH_0 = 8;
-   defparam mem_15_8.BIT_WIDTH_1 = 8;
+   dpb_2048x8 mem_23_16(
+                        .doa(rdata[23:16]),
+                        .dob(),
+                        .dia(wdata[23:16]),
+                        .dib(8'h0),
+                        .ada(address[15:2]),
+                        .adb(14'h0),
+                        .clka(clk_cpu),
+                        .clkb(1'b0),
+                        .sela(sel),
+                        .selb(1'b1),
+                        .wrea(wen[2]),
+                        .wreb(1'b0)
+                        );
 
-   DPB mem_23_16(
-                 .DOA( {dummy_23_16, rdata[23:16]} ),
-                 .DOB(),
-                 .DIA( {8'h0, wdata[23:16]} ),
-                 .DIB(16'h0),
-                 .ADA({ address[12:2], 3'h0 }),
-                 .ADB(14'h0),
-                 .CLKA(clk_cpu),
-                 .CLKB(1'b0),
-                 .OCEA(1'b1),
-                 .OCEB(1'b1),
-                 .CEA(sel),
-                 .CEB(1'b1),
-                 .WREA(wen[2]),
-                 .WREB(1'b0),
-                 .BLKSELA(3'b000),
-                 .BLKSELB(3'b000),
-                 .RESETA(1'b0),
-                 .RESETB(1'b0)
-                 );
-   defparam mem_23_16.BIT_WIDTH_0 = 8;
-   defparam mem_23_16.BIT_WIDTH_1 = 8;
-
-   DPB mem_31_24(
-                 .DOA( {dummy_31_24, rdata[31:24]} ),
-                 .DOB(),
-                 .DIA( {8'h0, wdata[31:24]} ),
-                 .DIB(16'h0),
-                 .ADA({ address[12:2], 3'h0 }),
-                 .ADB(14'h0),
-                 .CLKA(clk_cpu),
-                 .CLKB(1'b0),
-                 .OCEA(1'b1),
-                 .OCEB(1'b1),
-                 .CEA(sel),
-                 .CEB(1'b1),
-                 .WREA(wen[3]),
-                 .WREB(1'b0),
-                 .BLKSELA(3'b000),
-                 .BLKSELB(3'b000),
-                 .RESETA(1'b0),
-                 .RESETB(1'b0)
-                 );
-   defparam mem_31_24.BIT_WIDTH_0 = 8;
-   defparam mem_31_24.BIT_WIDTH_1 = 8;
+   dpb_2048x8 mem_31_24(
+                        .doa(rdata[31:24]),
+                        .dob(),
+                        .dia(wdata[31:24]),
+                        .dib(8'h0),
+                        .ada(address[15:2]),
+                        .adb(14'h0),
+                        .clka(clk_cpu),
+                        .clkb(1'b0),
+                        .sela(sel),
+                        .selb(1'b1),
+                        .wrea(wen[3]),
+                        .wreb(1'b0)
+                        );
 
 endmodule

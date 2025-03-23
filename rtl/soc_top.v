@@ -5,7 +5,7 @@ module soc_top
   #(
     parameter int UART_CLOCK_HZ = 27000000,
     parameter int UART_BAUD = 115200,
-    parameter SPI_FLASH_BASE = 0
+    parameter     SPI_FLASH_BASE = 0
     )
    (
     input        clk_cpu,
@@ -23,7 +23,7 @@ module soc_top
     output       spi_clk,
     output       spi_mosi,
     output       spi_miso
-);
+    );
 
    // SPI Flash Readed
    wire          sfr_start;
@@ -100,7 +100,7 @@ module soc_top
         video_ready <= mem_valid && !mem_ready && video_valid;
      end
 
-   // WRITE STRIBE
+   // WRITE STROBE
    assign uart_wstrb = mem_wstrb[0] & uart_valid;
    assign ram_wstrb = ram_valid ? mem_wstrb : 4'b0000;
    assign led_wstrb = mem_wstrb[0] & led_valid;
@@ -111,7 +111,7 @@ module soc_top
                          .clk_cpu(clk_cpu),
                          .sel(ram_valid),
                          .wen(ram_wstrb),
-                         .address(mem_addr[12:0]),
+                         .address(mem_addr[15:0]),
                          .wdata(mem_wdata),
                          .rdata(ram_data_out)
                          );
