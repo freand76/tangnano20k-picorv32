@@ -29,7 +29,7 @@ module dpb_2048x8
            .DIA({ 8'h0, dia }),
            .DIB({ 8'h0, dib }),
            .ADA({ ada[10:0], 3'h0 }),
-           .ADB({ ada[10:0], 3'h0 }),
+           .ADB({ adb[10:0], 3'h0 }),
            .CLKA(clka),
            .CLKB(clkb),
            .OCEA(1'b1),
@@ -39,7 +39,7 @@ module dpb_2048x8
            .WREA(wrea),
            .WREB(wreb),
            .BLKSELA(ada[13:11]),
-           .BLKSELB(ada[13:11]),
+           .BLKSELB(adb[13:11]),
            .RESETA(1'b0),
            .RESETB(1'b0)
            );
