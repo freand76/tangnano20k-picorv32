@@ -15,15 +15,23 @@ int main(void) {
 
     *ram32 = 0x00000000;
 
-    *ram++ = 0xfe;
-    *ram++ = 0xde;
-    *ram++ = 0xbe;
     *ram++ = 0xda;
+    *ram++ = 0xbe;
+    *ram++ = 0xde;
+    ;
+    *ram++ = 0xfe;
 
     led_set(0x02);
     uart_print_hex(*ram32);
     uart_print_char('\n');
-
+    led_set(0x12);
+    ram32[2048] = 0x12345678;
+    uart_print_char('\n');
+    uart_print_hex(ram32[2048]);
+    uart_print_char('\n');
+    uart_print_hex(ram32[0]);
+    uart_print_char('\n');
+    led_set(0x13);
     ram = (uint8_t *)0x01000000;
 
     ram[3] = 0x11;
@@ -39,13 +47,13 @@ int main(void) {
     uart_print_hex(*ram16);
     uart_print_char('\n');
 
-    volatile uint8_t *character_ram = (uint8_t *)0x01000400;
-    volatile uint8_t *font_ram = (uint8_t *)0x01000c00;
+    volatile uint8_t *font_ram = (uint8_t *)0x01000400;
+    volatile uint8_t *character_ram = (uint8_t *)0x01000800;
 
     volatile uint32_t *video_regs = (uint32_t *)0xf0000000;
 
-    video_regs[0] = 0x01000400;
-    video_regs[1] = 0x01000c00;
+    video_regs[0] = 0x01000800;
+    video_regs[1] = 0x01000400;
 
     for (uint16_t idx = 0; idx < 1200; idx++) {
         character_ram[idx] = 0;

@@ -14,64 +14,87 @@ module ram_memory(
                   output [31:0] video_rdata
                   );
 
-   dpb_2048x8 mem_7_0(
-                      .doa(rdata[7:0]),
-                      .dob(video_rdata[7:0]),
-                      .dia(wdata[7:0]),
-                      .dib(8'h0),
-                      .ada(address[15:2]),
-                      .adb(video_raddr[15:2]),
-                      .clka(clk_cpu),
-                      .clkb(clk_pixel),
-                      .sela(sel),
-                      .selb(1'b1),
-                      .wrea(wen[0]),
-                      .wreb(1'b0)
-                      );
+   wire [31:0]                  rdata0, rdata1, rdata2, rdata3;
+   wire [31:0]                  video_rdata0, video_rdata1, video_rdata2, video_rdata3;
 
-   dpb_2048x8 mem_15_8(
-                       .doa(rdata[15:8]),
-                       .dob(video_rdata[15:8]),
-                       .dia(wdata[15:8]),
-                       .dib(8'h0),
-                       .ada(address[15:2]),
-                       .adb(video_raddr[15:2]),
-                       .clka(clk_cpu),
-                       .clkb(clk_pixel),
-                       .sela(sel),
-                       .selb(1'b1),
-                       .wrea(wen[1]),
-                       .wreb(1'b0)
-                       );
+   assign rdata = address[15:13] == 3'h0 ? rdata0 :
+                  address[15:13] == 3'h1 ? rdata1 :
+                  address[15:13] == 3'h2 ? rdata2 : rdata3;
 
-   dpb_2048x8 mem_23_16(
-                        .doa(rdata[23:16]),
-                        .dob(video_rdata[23:16]),
-                        .dia(wdata[23:16]),
-                        .dib(8'h0),
-                        .ada(address[15:2]),
-                        .adb(video_raddr[15:2]),
-                        .clka(clk_cpu),
-                        .clkb(clk_pixel),
-                        .sela(sel),
-                        .selb(1'b1),
-                        .wrea(wen[2]),
-                        .wreb(1'b0)
-                        );
+   assign video_rdata = video_raddr[15:13] == 3'h0 ? video_rdata0 :
+                        video_raddr[15:13] == 3'h1 ? video_rdata1 :
+                        video_raddr[15:13] == 3'h2 ? video_rdata2 : video_rdata3;
 
-   dpb_2048x8 mem_31_24(
-                        .doa(rdata[31:24]),
-                        .dob(video_rdata[31:24]),
-                        .dia(wdata[31:24]),
-                        .dib(8'h0),
-                        .ada(address[15:2]),
-                        .adb(video_raddr[15:2]),
-                        .clka(clk_cpu),
-                        .clkb(clk_pixel),
-                        .sela(sel),
-                        .selb(1'b1),
-                        .wrea(wen[3]),
-                        .wreb(1'b0)
-                        );
+   dpb_2048x32 #(
+                 .BLKSEL(3'h0)
+                 )
+   mem0(
+        .doa(rdata0),
+        .dob(video_rdata0),
+        .dia(wdata),
+        .dib(32'h0),
+        .ada(address),
+        .adb(video_raddr),
+        .clka(clk_cpu),
+        .clkb(clk_pixel),
+        .sela(sel),
+        .selb(1'b1),
+        .wrea(wen),
+        .wreb(4'b0000)
+        );
+
+   dpb_2048x32 #(
+                 .BLKSEL(3'h1)
+                 )
+   mem1 (
+         .doa(rdata1),
+         .dob(video_rdata1),
+         .dia(wdata),
+         .dib(32'h0),
+         .ada(address),
+         .adb(video_raddr),
+         .clka(clk_cpu),
+         .clkb(clk_pixel),
+         .sela(sel),
+         .selb(1'b1),
+         .wrea(wen),
+         .wreb(4'b0000)
+         );
+
+   dpb_2048x32 #(
+                 .BLKSEL(3'h2)
+                 )
+   mem2 (
+         .doa(rdata2),
+         .dob(video_rdata2),
+         .dia(wdata),
+         .dib(32'h0),
+         .ada(address),
+         .adb(video_raddr),
+         .clka(clk_cpu),
+         .clkb(clk_pixel),
+         .sela(sel),
+         .selb(1'b1),
+         .wrea(wen),
+         .wreb(4'b0000)
+         );
+
+   dpb_2048x32 #(
+                 .BLKSEL(3'h3)
+                 )
+   mem3 (
+         .doa(rdata3),
+         .dob(video_rdata3),
+         .dia(wdata),
+         .dib(32'h0),
+         .ada(address),
+         .adb(video_raddr),
+         .clka(clk_cpu),
+         .clkb(clk_pixel),
+         .sela(sel),
+         .selb(1'b1),
+         .wrea(wen),
+         .wreb(4'b0000)
+         );
 
 endmodule

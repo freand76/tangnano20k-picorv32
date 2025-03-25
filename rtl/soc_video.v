@@ -67,8 +67,8 @@ module soc_video  #(
      begin
         if (!n_reset)
           begin
-             char_offset <= 32'h01000400;
-             font_offset <= 32'h01000c00;
+             font_offset <= 32'h01000400;
+             char_offset <= 32'h01000800;
           end
         else
           begin
