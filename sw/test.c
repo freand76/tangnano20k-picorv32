@@ -3,6 +3,7 @@
 
 #include "led_drv.h"
 #include "uart_drv.h"
+#include "font_8x8.h"
 
 int main(void) {
     uart_print_str("\n\nHello World\n");
@@ -48,7 +49,12 @@ int main(void) {
     uart_print_char('\n');
 
     volatile uint8_t *font_ram = (uint8_t *)0x01000400;
-    volatile uint8_t *character_ram = (uint8_t *)0x01000800;
+    const uint8_t *font_ptr = &font_8x8[0][0];
+    for (uint16_t idx = 0; idx < sizeof(font_8x8); idx++) {
+        font_ram[idx] = font_ptr[idx];
+    }
+
+    volatile char *character_ram = (char *)0x01000800;
 
     volatile uint32_t *video_regs = (uint32_t *)0xf0000000;
 
@@ -56,52 +62,8 @@ int main(void) {
     video_regs[1] = 0x01000400;
 
     for (uint16_t idx = 0; idx < 1200; idx++) {
-        character_ram[idx] = 0;
+        character_ram[idx] = idx % 256;
     }
-
-    character_ram[1] = 1;
-    character_ram[2] = 2;
-    character_ram[3] = 3;
-
-    character_ram[40] = 1;
-    character_ram[80] = 2;
-    character_ram[120] = 3;
-
-    font_ram[0] = 0;
-    font_ram[1] = 0;
-    font_ram[2] = 0;
-    font_ram[3] = 0x18;
-    font_ram[4] = 0x18;
-    font_ram[5] = 0;
-    font_ram[6] = 0;
-    font_ram[7] = 0;
-
-    font_ram[8] = 0x00;
-    font_ram[9] = 0x3c;
-    font_ram[10] = 0x66;
-    font_ram[11] = 0x7e;
-    font_ram[12] = 0x66;
-    font_ram[13] = 0x66;
-    font_ram[14] = 0x66;
-    font_ram[15] = 0x00;
-
-    font_ram[16] = 0x00;
-    font_ram[17] = 0x7e;
-    font_ram[18] = 0x7e;
-    font_ram[19] = 0x7e;
-    font_ram[20] = 0x7e;
-    font_ram[21] = 0x7e;
-    font_ram[22] = 0x7e;
-    font_ram[23] = 0x7e;
-
-    font_ram[24] = 0x00;
-    font_ram[25] = 0x18;
-    font_ram[26] = 0x18;
-    font_ram[27] = 0x18;
-    font_ram[28] = 0x18;
-    font_ram[29] = 0x18;
-    font_ram[30] = 0x18;
-    font_ram[31] = 0x00;
 
     uint8_t led_cnt = 0;
 
