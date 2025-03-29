@@ -26,6 +26,9 @@ module iverilog_top;
    parameter int IVERILOG_CLOCK = 20_000_000;
    parameter int IVERILOG_CLOCK_HALF_CYCLE = (1_000_000_000 / IVERILOG_CLOCK / 2);
 
+   wire [9:0]    dbg_xpos, dbg_ypos;
+   wire [7:0]    dbg_pixel;
+
    // VIDEO
    soc_video #(
                .START_X(0),
@@ -44,7 +47,10 @@ module iverilog_top;
               .video_rdata(video_rdata),
               .tmds_r(tmds_r),
               .tmds_g(tmds_g),
-              .tmds_b(tmds_b)
+              .tmds_b(tmds_b),
+              .dbg_xpos(dbg_xpos),
+              .dbg_ypos(dbg_ypos),
+              .dbg_pixel(dbg_pixel)
               );
 
    // RAM MEMORY
@@ -79,39 +85,40 @@ module iverilog_top;
 
    logic [23:0]      i;
 
+   wire              char_start = (dbg_xpos[3:0] == 4'h2);
+
    initial
      begin
         $display("Hello, Video World");
-        #2000;
         for (i = 0; i < 2048; i = i + 1)
           begin
              write_ram(24'h000400 + i, 32'h00);
              write_ram(24'h000800 + i, 32'h00);
           end
-        write_ram(24'h000400, 32'h03020100);
-        write_ram(24'h000404, 32'h07060504);
+        write_ram(24'h000800, 32'h03020100);
+        write_ram(24'h000804, 32'h07060504);
 
-        write_ram(24'h000800, 32'h11121314);
-        write_ram(24'h000804, 32'h15161718);
-        write_ram(24'h000808, 32'h21222324);
-        write_ram(24'h00080c, 32'h25262728);
-        write_ram(24'h000810, 32'h31323334);
-        write_ram(24'h000814, 32'h35363738);
-        write_ram(24'h000818, 32'h41424344);
-        write_ram(24'h00081c, 32'h45464748);
-        write_ram(24'h000820, 32'h51525354);
-        write_ram(24'h000824, 32'h55565758);
-        write_ram(24'h000828, 32'h61626364);
-        write_ram(24'h00082c, 32'h65666768);
-        write_ram(24'h000830, 32'h71727374);
-        write_ram(24'h000834, 32'h75767778);
-        write_ram(24'h000838, 32'h81828384);
-        write_ram(24'h00083c, 32'h85868788);
+        write_ram(24'h000400, 32'h14131211);
+        write_ram(24'h000404, 32'h18171615);
+        write_ram(24'h000408, 32'h24232221);
+        write_ram(24'h00040c, 32'h28272625);
+        write_ram(24'h000410, 32'h34333231);
+        write_ram(24'h000414, 32'h38373635);
+        write_ram(24'h000418, 32'h44434241);
+        write_ram(24'h00041c, 32'h48474645);
+        write_ram(24'h000420, 32'h54535251);
+        write_ram(24'h000424, 32'h58575655);
+        write_ram(24'h000428, 32'h64636261);
+        write_ram(24'h00042c, 32'h68676665);
+        write_ram(24'h000430, 32'h74737271);
+        write_ram(24'h000434, 32'h78777675);
+        write_ram(24'h000438, 32'h84838281);
+        write_ram(24'h00043c, 32'h88878685);
 
         $display("FRAME write done");
-        //$monitor("READ %x:%x", video_raddr, video_rdata);
-       forever
-          #10000000
+        $monitor("X: %3d Y: %3d PIXEL_DATA %b %b (%x,%x)", dbg_xpos, dbg_ypos, dbg_pixel, char_start, video_raddr, video_rdata);
+        wait(dbg_ypos == 1);
+        wait(dbg_xpos == 90);
         $finish;
      end
 

@@ -21,7 +21,11 @@ module soc_video  #(
     output [9:0]  tmds_b,
 
     output [31:0] video_raddr,
-    input [31:0]  video_rdata
+    input [31:0]  video_rdata,
+
+    output [9:0]  dbg_xpos,
+    output [9:0]  dbg_ypos,
+    output [7:0]  dbg_pixel
     );
 
    // DVI interface
@@ -49,6 +53,10 @@ module soc_video  #(
 
    wire [31:0]    char32_raddr, font32_raddr;
    wire           frame;
+
+   assign dbg_xpos = xpos;
+   assign dbg_ypos = ypos;
+   assign dbg_pixel = pixel_data;
 
    assign char32_raddr = char_offset + { 19'h0, y_word_offset, 2'h0 } + { 26'h0, x_word_offset, 2'h0 };
    assign font32_raddr = font_offset + { 21'h0, char_data[7:0], 3'h0 } + { 29'h0, font_line[3], 2'h0 };
@@ -118,7 +126,7 @@ module soc_video  #(
                end
              else if (active && (xpos != 10'h0))
                begin
-                  if (xpos[5:0] == 6'h0)
+                  if (xpos[5:0] == 6'h36)
                     begin
                        x_word_offset <= x_word_offset + 4'h1;
                        update_char <= 1'b1;
